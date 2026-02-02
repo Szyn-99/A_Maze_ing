@@ -20,6 +20,8 @@ def validate_lines(config_lines: list[str]) -> dict[str:int | str]:
                 tokens_to_return["OUTPUT_FILE"] = line.split("=")[1]
                 if len(tokens_to_return["OUTPUT_FILE"].split()) > 1:
                     raise ValueError(f"Invalid file name {tokens_to_return['OUTPUT_FILE']}")
+                else:
+                    tokens_to_return["OUTPUT_FILE"] = tokens_to_return["OUTPUT_FILE"].split()
             elif token == "PERFECT" and token in line:
                 tokens_to_search_dict["PERFECT"] += 1
                 tokens_to_return["PERFECT"] = line.split("=")[1]

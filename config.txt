@@ -2,9 +2,9 @@ WIDTH=20
 
 HEIGHT=20
 
-EXIT=   2,1
+EXIT=1,1
 
-ENTRY= 1,2
+ENTRY=1,2
 
-OUTPUT_FILE=output.txt
+OUT PUT_FILE=output.txt
 PERFECT=True
