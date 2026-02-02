@@ -6,6 +6,8 @@ def validate_lines(config_lines: list[str]) -> dict[str:int | str]:
     
     tokens_to_search_list = ["WIDTH", "HEIGHT", "EXIT","ENTRY", "OUTPUT_FILE", "PERFECT"]
     for line in config_lines:
+        if comment_lines_trigger(line):
+            continue
         for token in tokens_to_search_list:
             if token == "WIDTH" and token in line:
                 tokens_to_search_dict["WIDTH"] += 1
@@ -16,6 +18,8 @@ def validate_lines(config_lines: list[str]) -> dict[str:int | str]:
             elif token == "OUTPUT_FILE" and token in line:
                 tokens_to_search_dict["OUTPUT_FILE"] += 1
                 tokens_to_return["OUTPUT_FILE"] = line.split("=")[1]
+                if len(tokens_to_return["OUTPUT_FILE"].split()) > 1:
+                    raise ValueError(f"Invalid file name {tokens_to_return['OUTPUT_FILE']}")
             elif token == "PERFECT" and token in line:
                 tokens_to_search_dict["PERFECT"] += 1
                 tokens_to_return["PERFECT"] = line.split("=")[1]
@@ -31,9 +35,15 @@ def validate_lines(config_lines: list[str]) -> dict[str:int | str]:
                 tokens_to_return["ENTRY"]["y"] = int(y)
     for token in tokens_to_search_dict:
         if tokens_to_search_dict[token] > 1:
-            raise ValueError(f"Parsing Error: Too many tokens of the same aspect {tokens_to_search_dict[token]}")        
+            raise ValueError(f"Parsing Error: Too many tokens of the same aspect {tokens_to_search_dict[token]}")
     return tokens_to_return
 
+def comment_lines_trigger(line: str ) -> bool:
+    if line is None or line == "":
+        return True
+    if line[0] == "#":
+        return True
+    return False
 
 def empty_outputf_trigger(output_file: str) -> bool:
     if output_file is None or output_file == "":
@@ -53,24 +63,23 @@ def validate_tokens(config_tokens: dict) -> None:
     if config_tokens['ENTRY']['x'] >= width or config_tokens["ENTRY"]["y"] >= height:
         raise ValueError(f'Invalid Entry: ({config_tokens["ENTRY"]["x"]}, {config_tokens["ENTRY"]["y"]}), width/height=({width}, {height})')
     if config_tokens["EXIT"]["x"] >= width or config_tokens["EXIT"]["y"] >= height:
-        raise ValueError(f'Invalid Exit: ({config_tokens["EXIT"]["x"]}, {config_tokens["EXIT"]["y"]})')
+        raise ValueError(f'Invalid Exit: ({config_tokens["EXIT"]["x"]}, {config_tokens["EXIT"]["y"]}), width/height=({width}, {height})')
     if config_tokens['ENTRY']['x'] == config_tokens['EXIT']['x'] and config_tokens['ENTRY']['y'] == config_tokens['EXIT']['y']:
         raise ValueError(f"Entry and Exit cannot share the same point: "
                          f"Entry=({config_tokens['ENTRY']['x']}, {config_tokens['ENTRY']['y']}), "
                          f"Exit=({config_tokens['EXIT']['x']}, {config_tokens['EXIT']['y']})")
 
-def main() -> None:
+def Combining_rules() -> None:
     try:
         with open("config.txt", "r") as f:
             config_lines = [line.strip() for line in f]
-            tokens = validate_lines(config_lines)
-            print(tokens)
-            validate_tokens(tokens)
-        print("finish")
+        tokens = validate_lines(config_lines)
+        print(tokens)
+        validate_tokens(tokens)
     except Exception as e:
-        print("Error Occured")
-        print(f"Details:\nType: {e.__class__.__name__}\nwhat happend: {e}")
+        print("An Error Occured:")
+        print(f"\nType: {e.__class__.__name__}\nDetails: {e}")
 
 if __name__ == "__main__":
-    main()
+    Combining_rules()
             
