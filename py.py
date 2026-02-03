@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     h, w = 100, 100 
     maze = generate_maze(h, w)
-    maze = imperfect_maze(maze, h, w, 8)
+    maze = imperfect_maze(maze, h, w, 1000)
     plt.figure(figsize=(10, 10))
 
     plt.imshow(maze, cmap='binary') 
