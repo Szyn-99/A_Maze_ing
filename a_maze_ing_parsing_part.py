@@ -76,8 +76,8 @@ def Combining_rules() -> None:
         with open("config.txt", "r") as f:
             config_lines = [line.strip() for line in f]
         tokens = validate_lines(config_lines)
-        print(tokens)
         validate_tokens(tokens)
+        return tokens
     except Exception as e:
         print("An Error Occured:")
         print(f"\nType: {e.__class__.__name__}\nDetails: {e}")

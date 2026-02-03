@@ -7,7 +7,7 @@ def clear_screen():
     """Clear the terminal screen"""
     os.system('clear' if os.name != 'nt' else 'cls')
 
-def visualize_maze_animated(maze, delay=0.05, title="Maze Visualization"):
+def visualize_maze_animated(maze, delay=0.001, title="Maze Visualization"):
     """
     Animate the maze by revealing it row by row
     
@@ -42,7 +42,7 @@ def visualize_maze_animated(maze, delay=0.05, title="Maze Visualization"):
     print("\n\033[92m✓ Maze visualization complete!\033[0m")
     time.sleep(0.5)
 
-def visualize_maze_build(maze, delay=0.05, title="Building Maze"):
+def visualize_maze_build(maze, delay=0.001, title="Building Maze"):
     """
     Animate the maze being built cell by cell from top-left to bottom-right
     
@@ -179,7 +179,7 @@ def visualize_maze_with_markers(maze, entry=None, exit=None, path=None, title="M
 # Example usage and demo
 if __name__ == "__main__":
     # Import the maze generator
-    from a_maze_ing__parts import generate_maze
+    from amz_recursive_backtracker import generate_maze
     
     print("=" * 60)
     print("MAZE VISUALIZER DEMO")
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     print("\nGenerating maze...")
     
     height, width = 31, 31
-    maze = generate_maze(height, width)
+    maze = generate_maze(height, width, 8, 1)
     
     print("Maze generated successfully!")
     print("\nChoose visualization style:")
@@ -209,13 +209,13 @@ if __name__ == "__main__":
         print("\nStarting cell-by-cell visualization in 2 seconds...")
         time.sleep(2)
         # Demo 1: Build animation (cell by cell) - SLOWER
-        visualize_maze_build(maze, delay=0.05, title="Building Maze Cell-by-Cell")
+        visualize_maze_build(maze, delay=0.1, title="Building Maze Cell-by-Cell")
     
     print("\nPress Enter to see maze with entry/exit markers...")
     input()
     
     # Demo 2: With entry/exit markers
-    entry = (1, 1)
+    entry = (8, 1)
     exit_point = (width-2, height-2)
     visualize_maze_with_markers(maze, entry=entry, exit=exit_point, 
                                 title="Maze with Entry/Exit Markers")
