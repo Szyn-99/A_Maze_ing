@@ -1,100 +1,69 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import sys
 import random
 
-WIDTH = 39 # Width of the maze (must be odd).
-HEIGHT = 19 # Height of the maze (must be odd).
-assert WIDTH % 2 == 1 and WIDTH >= 3
-assert HEIGHT % 2 == 1 and HEIGHT >= 3
-SEED = 1
-random.seed(SEED)
+sys.setrecursionlimit(10000)
+random.seed(42)
+def maze_creator(height: int, width: int) -> np.ndarray:
+    if width % 2 == 0:
+        width += 1
+    if height % 2 == 0:
+        height += 1
 
-# Use these characters for displaying the maze:
-EMPTY = ' '
-MARK = '@'
-WALL = chr(9608) # Character 9608 is '█'
-NORTH, SOUTH, EAST, WEST = 'n', 's', 'e', 'w'
+    maze = np.ones((height, width), dtype=int)
+    return maze
 
-# Create the filled-in maze data structure to start:
-maze = {}
-for x in range(WIDTH):
-    for y in range(HEIGHT):
-        maze[(x, y)] = WALL # Every space is a wall at first.
+def recursive_backtracker(maze, x, y, height, width) -> None:
+    maze[y, x] = 0
 
-def printMaze(maze, markX=None, markY=None):
-    """Displays the maze data structure in the maze argument. The
-    markX and markY arguments are coordinates of the current
-    '@' location of the algorithm as it generates the maze."""
+    directions = ["north", "south", "west", "east"]
+    random.shuffle(directions)
+    for move in directions:
+        if move == "north" and y > 1 and maze[y-2, x] == 1:
+            maze[y-1, x] = 0
+            recursive_backtracker(maze, x, y-2, height, width)
+        elif move == "south" and y < height - 2 and maze[y+2, x] == 1:
+            maze[y+1, x] = 0
+            recursive_backtracker(maze, x, y+2, height, width)
+        elif move == "west" and x > 1 and maze[y, x-2] == 1:
+            maze[y, x-1] = 0
+            recursive_backtracker(maze, x-2, y, height, width)
+        elif move == "east" and x < width - 2 and maze[y, x+2] == 1:
+            maze[y, x+1] = 0
+            recursive_backtracker(maze, x+2, y, height, width)
 
-    for y in range(HEIGHT):
-        for x in range(WIDTH):
-            if markX == x and markY == y:
-                # Display the '@' mark here:
-                print(MARK, end='')
-            else:
-                # Display the wall or empty space:
-                print(maze[(x, y)], end='')
-        print() # Print a newline after printing the row.
-
-
-def visit(x, y):
-    """"Carve out" empty spaces in the maze at x, y and then
-    recursively move to neighboring unvisited spaces. This
-    function backtracks when the mark has reached a dead end."""
-    maze[(x, y)] = EMPTY # "Carve out" the space at x, y.
-    printMaze(maze, x, y) # Display the maze as we generate it.
-    print('\n\n')
-
-    while True:
-        # Check which neighboring spaces adjacent to
-        # the mark have not been visited already:
-        unvisitedNeighbors = []
-        if y > 1 and (x, y - 2) not in hasVisited:
-            unvisitedNeighbors.append(NORTH)
-
-        if y < HEIGHT - 2 and (x, y + 2) not in hasVisited:
-            unvisitedNeighbors.append(SOUTH)
-
-        if x > 1 and (x - 2, y) not in hasVisited:
-            unvisitedNeighbors.append(WEST)
-
-        if x < WIDTH - 2 and (x + 2, y) not in hasVisited:
-            unvisitedNeighbors.append(EAST)
-
-        if len(unvisitedNeighbors) == 0:
-            # BASE CASE
-            # All neighboring spaces have been visited, so this is a
-            # dead end. Backtrack to an earlier space:
-            return
-        else:
-            # RECURSIVE CASE
-            # Randomly pick an unvisited neighbor to visit:
-            nextIntersection = random.choice(unvisitedNeighbors)
-
-            # Move the mark to an unvisited neighboring space:
-
-            if nextIntersection == NORTH:
-                nextX = x
-                nextY = y - 2
-                maze[(x, y - 1)] = EMPTY # Connecting hallway.
-            elif nextIntersection == SOUTH:
-                nextX = x
-                nextY = y + 2
-                maze[(x, y + 1)] = EMPTY # Connecting hallway.
-            elif nextIntersection == WEST:
-                nextX = x - 2
-                nextY = y
-                maze[(x - 1, y)] = EMPTY # Connecting hallway.
-            elif nextIntersection == EAST:
-                nextX = x + 2
-                nextY = y
-                maze[(x + 1, y)] = EMPTY # Connecting hallway.
-
-            hasVisited.append((nextX, nextY)) # Mark as visited.
-            visit(nextX, nextY) # Recursively visit this space.
+def generate_maze(height: int, width: int) -> np.ndarray:
+    maze = maze_creator(height, width)
+    recursive_backtracker(maze, 19, 19, height, width)
+    return maze
 
 
-# Carve out the paths in the maze data structure:
-hasVisited = [(1, 1)] # Start by visiting the top-left corner.
-visit(1, 1)
+def imperfect_maze(maze, height, width, imperfection_rate) :
+    removeable_walls = []
+    for y in range(1, height - 1):
+        for x in range(1, width - 1):
+            if(maze[y,x] == 1):
+                if (maze[y+1, x] == 0 and maze[y-1, x] == 0) or (maze[y, x+1] == 0 and maze[y, x-1] == 0):
+                    removeable_walls.append((y,x))
+    random.shuffle(removeable_walls)
+    for y, x in removeable_walls[:imperfection_rate]:
+        maze[y, x] = 0
+    return maze
 
-# Display the final resulting maze data structure:
-printMaze(maze)
+
+if __name__ == "__main__":
+
+    h, w = 21, 21 
+    maze = generate_maze(h, w)
+    maze = imperfect_maze(maze, h, w, 8)
+    plt.figure(figsize=(10, 10))
+
+    plt.imshow(maze, cmap='binary') 
+    
+    plt.title(f"Maze {maze.shape[1]}x{maze.shape[0]}")
+    plt.axis('off') 
+    
+    output_file = 'maze_py_py.png'
+    plt.savefig(output_file)
+    print(f"Maze visualization saved to {output_file}")

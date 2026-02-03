@@ -1,7 +1,10 @@
 import numpy as m
 import matplotlib.pyplot as plt
 import sys
+import random
 
+seed = 42
+m.random.seed(seed)
 # Increase recursion depth for deep mazes
 sys.setrecursionlimit(2000)
 
@@ -48,12 +51,24 @@ def generate_maze(width: int, height: int) -> list:
     # Start at 1,1
     recursive_backtracker(maze, 1, 1)
     return maze
+def imperfect_maze(maze, imperfection_rate, height, width) -> None:
+    removeable_walls = []
+    for y in range(1, height - 1):
+        for x in range(1, width - 1):
+            if maze[y][x] == 0:
+                if (maze[y+1, x] == 1 and maze[y-1, x] == 1) or (maze[y, x+1] == 1 and maze[y, x-1] == 1):
+                    removeable_walls += [(x, y)]
+    random.shuffle(removeable_walls)
+    for x, y in removeable_walls[:imperfection_rate]:
+        maze[y,x] = 1
+    return maze
 
 if __name__ == "__main__":
     # Generate a maze
-    width, height = 100, 50
+    width, height = 50, 50
     maze = generate_maze(width, height)
-    
+    print(maze)
+    maze = imperfect_maze(maze, 4, height, width)
     # Visualization
     plt.figure(figsize=(10, 10))
     # Display the maze: Walls (0) will be purple/dark, Path (1) will be yellow/light
