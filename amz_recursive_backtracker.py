@@ -69,8 +69,8 @@ def imperfect_maze(maze, height, width, imperfection_rate) :
 
 if __name__ == "__main__":
 
-    h, w = 200, 200
-    maze = generate_maze(h, w, 19, 14)
+    h, w = 53, 53
+    maze = generate_maze(h, w, 3, 14)
     # maze = imperfect_maze(maze, h, w, 1000)
     plt.figure(figsize=(10, 10))
 
