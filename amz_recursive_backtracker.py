@@ -1,17 +1,16 @@
-import numpy as np
+import numpy as n
 import matplotlib.pyplot as plt
 import sys
 import random
-
-sys.setrecursionlimit(10000)
+sys.setrecursionlimit(50000)  # Increased for larger mazes
 random.seed(42)
-def maze_creator(height: int, width: int) -> np.ndarray:
+
+def grid_creator(height: int, width: int) -> n.ndarray:
     if width % 2 == 0:
         width += 1
     if height % 2 == 0:
         height += 1
-
-    maze = np.ones((height, width), dtype=int)
+    maze = n.ones((height, width), dtype=int)
     return maze
 
 def recursive_backtracker(maze, x, y, height, width) -> None:
@@ -33,9 +32,25 @@ def recursive_backtracker(maze, x, y, height, width) -> None:
             maze[y, x+1] = 0
             recursive_backtracker(maze, x+2, y, height, width)
 
-def generate_maze(height: int, width: int) -> np.ndarray:
-    maze = maze_creator(height, width)
-    recursive_backtracker(maze, 19, 19, height, width)
+def generate_maze(height: int, width: int, entry_x, entry_y) -> n.ndarray:
+    maze = grid_creator(height, width)
+    actual_height, actual_width = maze.shape  # Get actual dimensions after making odd
+    
+    # Store original entry coordinates
+    original_entry_x, original_entry_y = entry_x, entry_y
+    
+    # Make entry coordinates odd and within bounds
+    entry_x = entry_x if entry_x % 2 != 0 else entry_x + 1
+    entry_y = entry_y if entry_y % 2 != 0 else entry_y + 1
+    entry_x = min(entry_x, actual_width - 2)
+    entry_y = min(entry_y, actual_height - 2)
+    
+    # Generate the maze starting from the adjusted entry point
+    recursive_backtracker(maze, int(entry_x), int(entry_y), actual_height, actual_width)
+    
+    # Mark the original entry point as a path (in case it was even)
+    maze[original_entry_y, original_entry_x] = 0
+    
     return maze
 
 
@@ -54,9 +69,9 @@ def imperfect_maze(maze, height, width, imperfection_rate) :
 
 if __name__ == "__main__":
 
-    h, w = 100, 100 
-    maze = generate_maze(h, w)
-    maze = imperfect_maze(maze, h, w, 1000)
+    h, w = 200, 200
+    maze = generate_maze(h, w, 19, 14)
+    # maze = imperfect_maze(maze, h, w, 1000)
     plt.figure(figsize=(10, 10))
 
     plt.imshow(maze, cmap='binary') 
