@@ -1,11 +1,23 @@
-WIDTH=100
+WIDTH= 188
 
-HEIGHT=100
+HEIGHT= 60
 
-EXIT=5,9
+EXIT=4,8
+
+
 # seed must be <= 4294967295 and >= 0
-SEED=4294967295
-ENTRY=1,2
+
+
+SEED=
+
+
+ENTRY=4, 4
+
+
+FLAWED=
+
 
 OUTPUT_FILE=output.txt
-PERFECT=False
+
+
+PERFECT=True

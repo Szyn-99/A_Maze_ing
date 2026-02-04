@@ -1,10 +1,11 @@
 
 def validate_lines(config_lines: list[str]) -> dict[str:int | str]:
-    tokens_to_return = {"WIDTH": 0, "HEIGHT": 0, "EXIT": {"x": 0, "y": 0},"ENTRY": {"x": 0, "y": 0}, "OUTPUT_FILE": None, "PERFECT": 0}
+    tokens_to_return = {"WIDTH": 0, "HEIGHT": 0, "EXIT": {"x": 0, "y": 0},"ENTRY": {"x": 0, "y": 0},
+                        "OUTPUT_FILE": None, "PERFECT": 0, "FLAWED": 0, "SEED": None}
     
-    tokens_to_search_dict = {"WIDTH": 0, "HEIGHT": 0, "EXIT": 0,"ENTRY": 0, "OUTPUT_FILE": 0, "PERFECT": 0}
+    tokens_to_search_dict = {"WIDTH": 0, "HEIGHT": 0, "EXIT": 0,"ENTRY": 0, "OUTPUT_FILE": 0, "PERFECT": 0, "FLAWED": 0, "SEED": 0}
     
-    tokens_to_search_list = ["WIDTH", "HEIGHT", "EXIT","ENTRY", "OUTPUT_FILE", "PERFECT"]
+    tokens_to_search_list = ["WIDTH", "HEIGHT", "EXIT","ENTRY", "OUTPUT_FILE", "PERFECT", "FLAWED", "SEED"]
     for line in config_lines:
         if comment_lines_trigger(line):
             continue
@@ -35,6 +36,18 @@ def validate_lines(config_lines: list[str]) -> dict[str:int | str]:
                 x, y = line.split("=")[1].split(",")
                 tokens_to_return["ENTRY"]["x"] = int(x)
                 tokens_to_return["ENTRY"]["y"] = int(y)
+            elif token == "FLAWED" and token in line:
+                tokens_to_search_dict["FLAWED"] += 1
+                try:
+                    tokens_to_return["FLAWED"] = int(line.split("=")[1])
+                except ValueError:
+                    tokens_to_return["FLAWED"] = None
+            elif token == "SEED" and token in line:
+                tokens_to_search_dict["SEED"] += 1
+                try:
+                    tokens_to_return["SEED"] = int(line.split("=")[1])
+                except ValueError:
+                    tokens_to_return["SEED"] = None
     for token in tokens_to_search_dict:
         if tokens_to_search_dict[token] > 1:
             raise ValueError(f"Parsing Error: Too many tokens of the same aspect {tokens_to_search_dict[token]}")

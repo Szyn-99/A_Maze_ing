@@ -6,7 +6,6 @@ import random
 import matplotlib.pyplot as plt
 
 sys.setrecursionlimit(50000)
-random.seed(42)
 
 def grid_creator(height: int, width: int) -> n.ndarray:
     if width % 2 == 0:
@@ -16,45 +15,68 @@ def grid_creator(height: int, width: int) -> n.ndarray:
     maze = n.ones((height, width), dtype=int)
     return maze
 
-def recursive_backtracker(maze, x, y, height, width) -> None:
-    maze[y, x] = 0
-
+def recursive_backtracker(maze, enx, eny, height, width, exx, exy) -> None:
+    maze[eny, enx] = 0
+    path = (enx, eny) == (exx, exy)
     directions = ["north", "south", "west", "east"]
     random.shuffle(directions)
     for move in directions:
-        if move == "north" and y > 1 and maze[y-2, x] == 1:
-            maze[y-1, x] = 0
-            recursive_backtracker(maze, x, y-2, height, width)
-        elif move == "south" and y < height - 2 and maze[y+2, x] == 1:
-            maze[y+1, x] = 0
-            recursive_backtracker(maze, x, y+2, height, width)
-        elif move == "west" and x > 1 and maze[y, x-2] == 1:
-            maze[y, x-1] = 0
-            recursive_backtracker(maze, x-2, y, height, width)
-        elif move == "east" and x < width - 2 and maze[y, x+2] == 1:
-            maze[y, x+1] = 0
-            recursive_backtracker(maze, x+2, y, height, width)
+        if move == "north" and eny > 1 and maze[eny-2, enx] == 1:
+            maze[eny-1, enx] = 0
+            if recursive_backtracker(maze, enx, eny-2, height, width, exx, exy):
+                path = True
+                maze[eny-1, enx] = 42
+        elif move == "south" and eny < height - 2 and maze[eny+2, enx] == 1:
+            maze[eny+1, enx] = 0
+            if recursive_backtracker(maze, enx, eny+2, height, width, exx, exy):
+                path = True
+                maze[eny+1, enx] = 42
+        elif move == "west" and enx > 1 and maze[eny, enx-2] == 1:
+            maze[eny, enx-1] = 0
+            if recursive_backtracker(maze, enx-2, eny, height, width, exx, exy):
+                path = True
+                maze[eny, enx-1] = 42
+        elif move == "east" and enx < width - 2 and maze[eny, enx+2] == 1:
+            maze[eny, enx+1] = 0
+            if recursive_backtracker(maze, enx+2, eny, height, width, exx, exy):
+                path = True
+                maze[eny, enx+1] = 42
+    if path:
+        maze[eny, enx] = 42
+    return path
 
 def generate_maze(height: int, width: int, entry_point: tuple, exit_point) -> n.ndarray:
-    maze = grid_creator(height, width)
-    actual_height, actual_width = maze.shape
     
-    original_entry_x, original_entry_y = entry_point
+    maze = grid_creator(height, width)
+    
+    actual_height, actual_width = height, width
     entry_x , entry_y = entry_point
+    exit_x , exit_y = exit_point
+    
+    exit_x = exit_x if exit_x % 2 != 0 else exit_x + 1
+    exit_y = exit_y if exit_y % 2 != 0 else exit_y + 1
+    
+
     entry_x = entry_x if entry_x % 2 != 0 else entry_x + 1
     entry_y = entry_y if entry_y % 2 != 0 else entry_y + 1
     
     entry_x = min(entry_x, actual_width - 2)
     entry_y = min(entry_y, actual_height - 2)
     
-    recursive_backtracker(maze, int(entry_x), int(entry_y), actual_height, actual_width)
+    exit_x = min(exit_x, actual_width - 2)
+    exit_y = min(exit_y, actual_height - 2)
     
-    maze[original_entry_y, original_entry_x] = 0
+    recursive_backtracker(maze, entry_x, entry_y, actual_height, actual_width, exit_x, exit_y)
+    
+    if maze[entry_point[1], entry_point[0]] == 0:
+        maze[entry_point[1], entry_point[0]] = 42
+    if maze[exit_point[1], exit_point[0]] == 0:
+        maze[exit_point[1], exit_point[0]] = 42
     
     return maze
 
 
-def imperfect_maze(maze, height, width, imperfection_rate) :
+def imperfect_maze(maze, height, width, flawed):
     removeable_walls = []
     for y in range(1, height - 1):
         for x in range(1, width - 1):
@@ -62,7 +84,7 @@ def imperfect_maze(maze, height, width, imperfection_rate) :
                 if (maze[y+1, x] == 0 and maze[y-1, x] == 0) or (maze[y, x+1] == 0 and maze[y, x-1] == 0):
                     removeable_walls.append((y,x))
     random.shuffle(removeable_walls)
-    for y, x in removeable_walls[:imperfection_rate]:
+    for y, x in removeable_walls[:flawed]:
         maze[y, x] = 0
     return maze
 
@@ -72,21 +94,40 @@ if __name__ == "__main__":
     from a_maze_ing_parsing_part import Combining_rules
 
     tokens = Combining_rules()
-    
+    print("Parsed Configuration Tokens:", tokens)
     height = tokens['HEIGHT']
     width = tokens['WIDTH']
     entry_point = (tokens['ENTRY']["x"], tokens['ENTRY']["y"],)
     exit_point = (tokens['EXIT']["x"], tokens['EXIT']["y"],)
     perfect = True if 'True' in tokens['PERFECT'] else False
+    flawed = tokens["FLAWED"]
+    seed = tokens["SEED"]
+    if flawed is None:
+        flawed = 0
+    if seed is not None:
+        random.seed(seed)
     
     maze = generate_maze(height, width, entry_point, exit_point)
-    if perfect:
-        maze = imperfect_maze(maze, height, width, imperfection_rate = 10)
-    plt.figure(figsize=(10, 10))
-
-    plt.imshow(maze, cmap='binary') 
+    if not perfect:
+        maze = imperfect_maze(maze, height, width, flawed)
     
-    plt.title(f"Maze {maze.shape[1]}x{maze.shape[0]}")
+    
+    import matplotlib.colors as mcolors
+    
+    display_maze = n.copy(maze)
+    display_maze = display_maze.astype(float)
+    display_maze[maze == 42] = 0.5 
+    display_maze[maze == 0] = 1.0   
+    display_maze[maze == 1] = 0.0  
+    
+    plt.figure(figsize=(10, 10))
+    cmap = mcolors.ListedColormap(['black', 'lime', 'white'])
+    bounds = [0, 0.25, 0.75, 1.0]
+    norm = mcolors.BoundaryNorm(bounds, cmap.N)
+    
+    plt.imshow(display_maze, cmap=cmap, norm=norm) 
+    
+    plt.title(f"Maze {maze.shape[1]}x{maze.shape[0]} (Green = Path)")
     plt.axis('off') 
     
     output_file = 'maze_py_py.png'
