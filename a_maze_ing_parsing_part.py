@@ -1,4 +1,3 @@
-
 def validate_lines(config_lines: list[str]) -> dict[str:int | str]:
     tokens_to_return = {"WIDTH": 0, "HEIGHT": 0, "EXIT": {"x": 0, "y": 0},"ENTRY": {"x": 0, "y": 0},
                         "OUTPUT_FILE": None, "PERFECT": 0, "FLAWED": 0, "SEED": None}
@@ -86,7 +85,9 @@ def validate_tokens(config_tokens: dict) -> None:
 
 def Combining_rules() -> None:
     try:
-        with open("config.txt", "r") as f:
+        from sys import argv
+        config_file = argv[1]
+        with open(config_file, "r") as f:
             config_lines = [line.strip() for line in f]
         tokens = validate_lines(config_lines)
         validate_tokens(tokens)

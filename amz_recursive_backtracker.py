@@ -8,10 +8,7 @@ import matplotlib.pyplot as plt
 sys.setrecursionlimit(50000)
 
 def grid_creator(height: int, width: int) -> n.ndarray:
-    if width % 2 == 0:
-        width += 1
-    if height % 2 == 0:
-        height += 1
+    
     maze = n.ones((height, width), dtype=int)
     return maze
 
@@ -55,7 +52,7 @@ def generate_maze(height: int, width: int, entry_point: tuple, exit_point) -> n.
     
     exit_x = exit_x if exit_x % 2 != 0 else exit_x + 1
     exit_y = exit_y if exit_y % 2 != 0 else exit_y + 1
-    
+
 
     entry_x = entry_x if entry_x % 2 != 0 else entry_x + 1
     entry_y = entry_y if entry_y % 2 != 0 else entry_y + 1
@@ -92,6 +89,7 @@ def imperfect_maze(maze, height, width, flawed):
 if __name__ == "__main__":
 
     from a_maze_ing_parsing_part import Combining_rules
+    import matplotlib.colors as mcolors
 
     tokens = Combining_rules()
     print("Parsed Configuration Tokens:", tokens)
@@ -106,13 +104,16 @@ if __name__ == "__main__":
         flawed = 0
     if seed is not None:
         random.seed(seed)
+    if width % 2 == 0:
+        width += 1
+    if height % 2 == 0:
+        height += 1
     
     maze = generate_maze(height, width, entry_point, exit_point)
     if not perfect:
         maze = imperfect_maze(maze, height, width, flawed)
     
     
-    import matplotlib.colors as mcolors
     
     display_maze = n.copy(maze)
     display_maze = display_maze.astype(float)
