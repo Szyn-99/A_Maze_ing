@@ -2,10 +2,10 @@ import numpy as n
 import sys
 import random
 
-
+from amz_parsing import Combining_rules
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 
-sys.setrecursionlimit(50000)
 
 def grid_creator(height: int, width: int) -> n.ndarray:
     
@@ -85,52 +85,93 @@ def imperfect_maze(maze, height, width, flawed):
         maze[y, x] = 0
     return maze
 
+def maze_bringer(height, width, entry_point, exit_point, perfect, flawed, seed, output_file):
+    try:
+        entry  = (entry_point["x"], entry_point["y"],)
+        exit = (exit_point["x"], exit_point["y"],)
+        perfect = True if 'True' in perfect else False
+        flawed = flawed
+        seed = seed
+        if flawed is None:
+            flawed = 0
+        if seed is not None:
+            random.seed(seed)
+        if width % 2 == 0:
+            width += 1
+        if height % 2 == 0:
+            height += 1
+        
+        maze = generate_maze(height, width, entry, exit)
+        if not perfect:
+            maze = imperfect_maze(maze, height, width, flawed)
+        
+        return maze
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+    finally:
+        display_maze = n.copy(maze)
+        display_maze = display_maze.astype(float)
+        display_maze[maze == 42] = 0.5 
+        display_maze[maze == 0] = 1.0   
+        display_maze[maze == 1] = 0.0  
+        
+        plt.figure(figsize=(10, 10))
+        cmap = mcolors.ListedColormap(['black', 'lime', 'white'])
+        bounds = [0, 0.25, 0.75, 1.0]
+        norm = mcolors.BoundaryNorm(bounds, cmap.N)
+        
+        plt.imshow(display_maze, cmap=cmap, norm=norm) 
+        
+        plt.title(f"Maze {maze.shape[1]}x{maze.shape[0]} (Green = Path)")
+        plt.axis('off') 
+        
+        plt.savefig("maze.png")
+        print(f"Maze visualization saved to maze.png")
 
 if __name__ == "__main__":
-
-    from a_maze_ing_parsing_part import Combining_rules
-    import matplotlib.colors as mcolors
-
-    tokens = Combining_rules()
-    print("Parsed Configuration Tokens:", tokens)
-    height = tokens['HEIGHT']
-    width = tokens['WIDTH']
-    entry_point = (tokens['ENTRY']["x"], tokens['ENTRY']["y"],)
-    exit_point = (tokens['EXIT']["x"], tokens['EXIT']["y"],)
-    perfect = True if 'True' in tokens['PERFECT'] else False
-    flawed = tokens["FLAWED"]
-    seed = tokens["SEED"]
-    if flawed is None:
-        flawed = 0
-    if seed is not None:
-        random.seed(seed)
-    if width % 2 == 0:
-        width += 1
-    if height % 2 == 0:
-        height += 1
-    
-    maze = generate_maze(height, width, entry_point, exit_point)
-    if not perfect:
-        maze = imperfect_maze(maze, height, width, flawed)
-    
-    
-    
-    display_maze = n.copy(maze)
-    display_maze = display_maze.astype(float)
-    display_maze[maze == 42] = 0.5 
-    display_maze[maze == 0] = 1.0   
-    display_maze[maze == 1] = 0.0  
-    
-    plt.figure(figsize=(10, 10))
-    cmap = mcolors.ListedColormap(['black', 'lime', 'white'])
-    bounds = [0, 0.25, 0.75, 1.0]
-    norm = mcolors.BoundaryNorm(bounds, cmap.N)
-    
-    plt.imshow(display_maze, cmap=cmap, norm=norm) 
-    
-    plt.title(f"Maze {maze.shape[1]}x{maze.shape[0]} (Green = Path)")
-    plt.axis('off') 
-    
-    output_file = 'maze_py_py.png'
-    plt.savefig(output_file)
-    print(f"Maze visualization saved to {output_file}")
+    try:
+        tokens = Combining_rules()
+        height = tokens['HEIGHT']
+        width = tokens['WIDTH']
+        entry_point = (tokens['ENTRY']["x"], tokens['ENTRY']["y"],)
+        exit_point = (tokens['EXIT']["x"], tokens['EXIT']["y"],)
+        perfect = True if 'True' in tokens['PERFECT'] else False
+        flawed = tokens["FLAWED"]
+        seed = tokens["SEED"]
+        if flawed is None:
+            flawed = 0
+        if seed is not None:
+            random.seed(seed)
+        if width % 2 == 0:
+            width += 1
+        if height % 2 == 0:
+            height += 1
+        
+        maze = generate_maze(height, width, entry_point, exit_point)
+        if not perfect:
+            maze = imperfect_maze(maze, height, width, flawed)
+        
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+    finally:
+        display_maze = n.copy(maze)
+        display_maze = display_maze.astype(float)
+        display_maze[maze == 42] = 0.5 
+        display_maze[maze == 0] = 1.0   
+        display_maze[maze == 1] = 0.0  
+        
+        plt.figure(figsize=(10, 10))
+        cmap = mcolors.ListedColormap(['black', 'lime', 'white'])
+        bounds = [0, 0.25, 0.75, 1.0]
+        norm = mcolors.BoundaryNorm(bounds, cmap.N)
+        
+        plt.imshow(display_maze, cmap=cmap, norm=norm) 
+        
+        plt.title(f"Maze {maze.shape[1]}x{maze.shape[0]} (Green = Path)")
+        plt.axis('off') 
+        
+        output_file = tokens["OUTPUT_FILE"]
+        plt.savefig(output_file)
+        print(f"Maze visualization saved to {output_file}")
