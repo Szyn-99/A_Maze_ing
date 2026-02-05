@@ -163,7 +163,6 @@ class A_Maze_Ing:
     
             maze = self.grid_creator(height, width)
             
-            actual_height, actual_width = height, width
             entry_x , entry_y = entry_point
             exit_x , exit_y = exit_point
             
@@ -174,18 +173,16 @@ class A_Maze_Ing:
             entry_x = entry_x if entry_x % 2 != 0 else entry_x + 1
             entry_y = entry_y if entry_y % 2 != 0 else entry_y + 1
             
-            entry_x = min(entry_x, actual_width - 2)
-            entry_y = min(entry_y, actual_height - 2)
+            entry_x = min(entry_x, width - 2)
+            entry_y = min(entry_y, height - 2)
             
-            exit_x = min(exit_x, actual_width - 2)
-            exit_y = min(exit_y, actual_height - 2)
+            exit_x = min(exit_x, width - 2)
+            exit_y = min(exit_y, height - 2)
             
-            self.recursive_backtracker(maze, entry_x, entry_y, actual_height, actual_width, exit_x, exit_y)
+            self.recursive_backtracker(maze, entry_x, entry_y, height, width, exit_x, exit_y)
+            maze[entry_y, entry_x] = 0xE
+            maze[exit_y, exit_x] = 0xE2
             
-            if maze[entry_point[1], entry_point[0]] == 0:
-                maze[entry_point[1], entry_point[0]] = 3
-            if maze[exit_point[1], exit_point[0]] == 0:
-                maze[exit_point[1], exit_point[0]] = 4
             
             return maze
         
@@ -270,16 +267,33 @@ class A_Maze_Ing:
         mapping = {
             0: PATH,
             1: WALL,
-            3: START,
-            4: END,
+            0xE: START,
+            0xE2: END,
             42: SYM
         }
         for row in maze:
             for cell in row:
                 print(mapping.get(cell, PATH), end="")
             print(RESET)
+    @staticmethod
+    def maze_hexadecimal(maze, output_file, height, width):
+        with open(output_file, "w+") as f:
+            for y in range(1, height-1):
+                for x in range(1, width-1):
+                    cell_hex = 0
+                    if maze[y-1][x] == 1: cell_hex += 1
+                    if maze[y+1][x] == 1: cell_hex += 4
+                    if maze[y][x+1] == 1: cell_hex += 2
+                    if maze[y][x-1] == 1: cell_hex += 8
+                    if x < width-2:
+                        print(hex(cell_hex)[2:].upper(), file=f, end="")
+                    else:
+                        print(hex(cell_hex)[2:].upper(), file=f, end="\n")
+
+                
     def generate_maze(self):
         maze = self.maze.maze_bringer()
+        A_Maze_Ing.maze_hexadecimal(maze, self.output_file, self.height, self.width)
         A_Maze_Ing.maze_printer(maze)
         
     def print_arguments(self):
