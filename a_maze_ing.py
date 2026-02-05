@@ -129,7 +129,7 @@ class A_Maze_Ing:
             maze = n.ones((height, width), dtype=int)
             return maze
         
-        def recursive_backtracker(self, maze, enx, eny, height, width, exx, exy) -> None:
+        def recursive_backtracker(self, maze, enx, eny, height, width, exx, exy, path_way):
             maze[eny, enx] = 0
             path = (enx, eny) == (exx, exy)
             directions = ["north", "south", "west", "east"]
@@ -137,27 +137,35 @@ class A_Maze_Ing:
             for move in directions:
                 if move == "north" and eny > 1 and maze[eny-2, enx] == 1:
                     maze[eny-1, enx] = 0
-                    if self.recursive_backtracker(maze, enx, eny-2, height, width, exx, exy):
+                    result = self.recursive_backtracker(maze, enx, eny-2, height, width, exx, exy, path_way)
+                    if result[0]:
                         path = True
                         maze[eny-1, enx] = 42
+                        path_way.append("S")  # Path from exit: came from south (went north during exploration)
                 elif move == "south" and eny < height - 2 and maze[eny+2, enx] == 1:
                     maze[eny+1, enx] = 0
-                    if self.recursive_backtracker(maze, enx, eny+2, height, width, exx, exy):
+                    result = self.recursive_backtracker(maze, enx, eny+2, height, width, exx, exy, path_way)
+                    if result[0]:
                         path = True
                         maze[eny+1, enx] = 42
+                        path_way.append("N")  # Path from exit: came from north (went south during exploration)
                 elif move == "west" and enx > 1 and maze[eny, enx-2] == 1:
                     maze[eny, enx-1] = 0
-                    if self.recursive_backtracker(maze, enx-2, eny, height, width, exx, exy):
+                    result = self.recursive_backtracker(maze, enx-2, eny, height, width, exx, exy, path_way)
+                    if result[0]:
                         path = True
                         maze[eny, enx-1] = 42
+                        path_way.append("E")  # Path from exit: came from east (went west during exploration)
                 elif move == "east" and enx < width - 2 and maze[eny, enx+2] == 1:
                     maze[eny, enx+1] = 0
-                    if self.recursive_backtracker(maze, enx+2, eny, height, width, exx, exy):
+                    result = self.recursive_backtracker(maze, enx+2, eny, height, width, exx, exy, path_way)
+                    if result[0]:
                         path = True
                         maze[eny, enx+1] = 42
+                        path_way.append("W")  # Path from exit: came from west (went east during exploration)
             if path:
                 maze[eny, enx] = 42
-            return path
+            return path, path_way
         
         def generate_maze(self, height: int, width: int, entry_point: tuple, exit_point: tuple) -> n.ndarray:
     
@@ -178,13 +186,13 @@ class A_Maze_Ing:
             
             exit_x = min(exit_x, width - 2)
             exit_y = min(exit_y, height - 2)
-            
-            self.recursive_backtracker(maze, entry_x, entry_y, height, width, exit_x, exit_y)
+            path_way = []
+            self.recursive_backtracker(maze, entry_x, entry_y, height, width, exit_x, exit_y, path_way)
             maze[entry_y, entry_x] = 0xE
             maze[exit_y, exit_x] = 0xE2
             
             
-            return maze
+            return maze, path_way
         
         def imperfect_maze(self, maze, height, width, flawed):
             removeable_walls = []
@@ -217,43 +225,43 @@ class A_Maze_Ing:
                 if height % 2 == 0:
                     height += 1
                 
-                maze = self.generate_maze(height, width, entry, exit)
+                maze, path_way = self.generate_maze(height, width, entry, exit)
                 if not perfect:
                     maze = self.imperfect_maze(maze, height, width, flawed)
                 
-                return maze
+                return maze, path_way
             except Exception as e:
                 print(f"Error: {e}")
                 sys.exit(1)
-            finally:
-                display_maze = n.copy(maze)
-                display_maze = display_maze.astype(float)
-                display_maze[maze == 42] = 0.5 
-                display_maze[maze == 0] = 1.0   
-                display_maze[maze == 1] = 0.0  
+            # finally:
+            #     display_maze = n.copy(maze)
+            #     display_maze = display_maze.astype(float)
+            #     display_maze[maze == 42] = 0.5 
+            #     display_maze[maze == 0] = 1.0   
+            #     display_maze[maze == 1] = 0.0  
                 
-                # Dynamically calculate figure size based on maze dimensions
-                aspect_ratio = width / height
-                base_size = 10  # Base size for smaller dimension
-                if aspect_ratio > 1:  # Width > Height
-                    fig_width = base_size * aspect_ratio
-                    fig_height = base_size
-                else:  # Height >= Width
-                    fig_width = base_size
-                    fig_height = base_size / aspect_ratio
+            #     # Dynamically calculate figure size based on maze dimensions
+            #     aspect_ratio = width / height
+            #     base_size = 10  # Base size for smaller dimension
+            #     if aspect_ratio > 1:  # Width > Height
+            #         fig_width = base_size * aspect_ratio
+            #         fig_height = base_size
+            #     else:  # Height >= Width
+            #         fig_width = base_size
+            #         fig_height = base_size / aspect_ratio
                 
-                plt.figure(figsize=(fig_width, fig_height))
-                cmap = mcolors.ListedColormap(['black', 'lime', 'white'])
-                bounds = [0, 0.25, 0.75, 1.0]
-                norm = mcolors.BoundaryNorm(bounds, cmap.N)
+            #     plt.figure(figsize=(fig_width, fig_height))
+            #     cmap = mcolors.ListedColormap(['black', 'lime', 'white'])
+            #     bounds = [0, 0.25, 0.75, 1.0]
+            #     norm = mcolors.BoundaryNorm(bounds, cmap.N)
                 
-                plt.imshow(display_maze, cmap=cmap, norm=norm) 
+            #     plt.imshow(display_maze, cmap=cmap, norm=norm) 
                 
-                plt.title(f"Maze {maze.shape[1]}x{maze.shape[0]} (Green = Path)")
-                plt.axis('off') 
+            #     plt.title(f"Maze {maze.shape[1]}x{maze.shape[0]} (Green = Path)")
+            #     plt.axis('off') 
                 
-                plt.savefig("maaaze.png")
-                print(f"Maze visualization saved to maaaze.png")
+            #     plt.savefig("maaaze.png")
+            #     print(f"Maze visualization saved to maaaze.png")
     @staticmethod
     def maze_printer(maze):
         
@@ -276,27 +284,35 @@ class A_Maze_Ing:
                 print(mapping.get(cell, PATH), end="")
             print(RESET)
     @staticmethod
-    def maze_hexadecimal(maze, output_file, height, width, entry_p, exit_p):
+    def maze_hexadecimal(maze, output_file, height, width, entry_p, exit_p, path_way):
+        duplicate_path_cells = []
+        for direction in path_way:
+            duplicate_path_cells.append(direction)
+            duplicate_path_cells.append(direction)
         with open(output_file, "w+") as f:
+            
             for y in range(1, height-1):
                 for x in range(1, width-1):
                     cell_hex = 0
-                    if maze[y-1][x] == 1: cell_hex += 1
-                    if maze[y+1][x] == 1: cell_hex += 4
-                    if maze[y][x+1] == 1: cell_hex += 2
-                    if maze[y][x-1] == 1: cell_hex += 8
+                    if maze[y-1][x] == 1: cell_hex += 1 #North
+                    if maze[y+1][x] == 1: cell_hex += 4 #South
+                    if maze[y][x+1] == 1: cell_hex += 2 #East
+                    if maze[y][x-1] == 1: cell_hex += 8 #West
                     if x < width-2:
                         print(hex(cell_hex)[2:].upper(), file=f, end="")
                     else:
                         print(hex(cell_hex)[2:].upper(), file=f, end="\n")
-            enx, eny, = entry_p
-            exx, exy, = exit_p
-            print("\n")
-            print(f"{enx},{eny}")
-            print(f"{exx},{exy}")
+            enx, eny, = entry_p["x"], entry_p["y"]
+            exx, exy, = exit_p["x"], exit_p["y"]
+            print(f"\n{enx},{eny}", file=f, end="\n")
+            print(f"{exx},{exy}", file=f, end="\n")
+            for direction in duplicate_path_cells:
+                print(direction, file=f, end="")
+            print
+            
     def generate_maze(self):
-        maze = self.maze.maze_bringer()
-        A_Maze_Ing.maze_hexadecimal(maze, self.output_file, self.height, self.width, self.entry, self.exit)
+        maze, path_way = self.maze.maze_bringer()
+        A_Maze_Ing.maze_hexadecimal(maze, self.output_file, self.height, self.width, self.entry, self.exit, path_way)
         A_Maze_Ing.maze_printer(maze)
         
     def print_arguments(self):
