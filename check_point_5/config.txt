@@ -1,0 +1,23 @@
+WIDTH= 120
+
+HEIGHT= 140
+
+EXIT=44,22
+
+
+# seed must be <= 4294967295 and >= 0
+
+
+SEED=
+
+
+ENTRY=8, 1
+
+
+FLAWED=20
+
+
+OUTPUT_FILE=output.txt
+
+
+PERFECT=True
