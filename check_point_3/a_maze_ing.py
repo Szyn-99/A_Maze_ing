@@ -183,9 +183,9 @@ class A_Maze_Ing:
             self.recursive_backtracker(maze, entry_x, entry_y, actual_height, actual_width, exit_x, exit_y)
             
             if maze[entry_point[1], entry_point[0]] == 0:
-                maze[entry_point[1], entry_point[0]] = 3
+                maze[entry_point[1], entry_point[0]] = 42
             if maze[exit_point[1], exit_point[0]] == 0:
-                maze[exit_point[1], exit_point[0]] = 4
+                maze[exit_point[1], exit_point[0]] = 42
             
             return maze
         
@@ -257,30 +257,9 @@ class A_Maze_Ing:
                 
                 plt.savefig("maaaze.png")
                 print(f"Maze visualization saved to maaaze.png")
-    @staticmethod
-    def maze_printer(maze):
-        
-        RESET = "\033[0m"
-        WALL  = "\033[40m  "           
-        PATH  = "\033[48;5;254m  "    
-        SYM   = "\033[48;5;250m░░"    
-        START = "\033[48;5;129m  "    
-        END   = "\033[48;5;196m  "
-        
-        mapping = {
-            0: PATH,
-            1: WALL,
-            3: START,
-            4: END,
-            42: SYM
-        }
-        for row in maze:
-            for cell in row:
-                print(mapping.get(cell, PATH), end="")
-            print(RESET)
+                
     def generate_maze(self):
-        maze = self.maze.maze_bringer()
-        A_Maze_Ing.maze_printer(maze)
+        return self.maze.maze_bringer()
         
     def print_arguments(self):
         print(f"Height: {self.height}")

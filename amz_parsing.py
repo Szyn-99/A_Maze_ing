@@ -90,6 +90,10 @@ def Combining_rules() -> dict:
     try:
         from sys import argv
         config_file = argv[1]
+        if len(argv) > 2:
+            raise ValueError("Too many arguments provided. Only the configuration file path is required.")
+        elif len(argv) < 2:
+            raise ValueError("No configuration file provided. Please provide the path to the configuration file.")
         with open(config_file, "r") as f:
             config_lines = [line.strip() for line in f]
         tokens = validate_lines(config_lines)

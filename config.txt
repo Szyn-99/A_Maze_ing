@@ -1,14 +1,14 @@
-WIDTH= 22
+WIDTH= 30
 
-HEIGHT= 22
+HEIGHT= 30
 
-EXIT=1,5
+EXIT=29,29
 
 
 # seed must be <= 4294967295 and >= 0
 
 
-SEED=
+SEED=6
 
 
 ENTRY=1, 1
