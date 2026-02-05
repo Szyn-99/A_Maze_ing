@@ -141,28 +141,28 @@ class A_Maze_Ing:
                     if result[0]:
                         path = True
                         maze[eny-1, enx] = 42
-                        path_way.append("N")  # Went north during exploration
+                        path_way.append("S")  # Path from exit: came from south (went north during exploration)
                 elif move == "south" and eny < height - 2 and maze[eny+2, enx] == 1:
                     maze[eny+1, enx] = 0
                     result = self.recursive_backtracker(maze, enx, eny+2, height, width, exx, exy, path_way)
                     if result[0]:
                         path = True
                         maze[eny+1, enx] = 42
-                        path_way.append("S")  # Went south during exploration
+                        path_way.append("N")  # Path from exit: came from north (went south during exploration)
                 elif move == "west" and enx > 1 and maze[eny, enx-2] == 1:
                     maze[eny, enx-1] = 0
                     result = self.recursive_backtracker(maze, enx-2, eny, height, width, exx, exy, path_way)
                     if result[0]:
                         path = True
                         maze[eny, enx-1] = 42
-                        path_way.append("W")  # Went west during exploration
+                        path_way.append("E")  # Path from exit: came from east (went west during exploration)
                 elif move == "east" and enx < width - 2 and maze[eny, enx+2] == 1:
                     maze[eny, enx+1] = 0
                     result = self.recursive_backtracker(maze, enx+2, eny, height, width, exx, exy, path_way)
                     if result[0]:
                         path = True
                         maze[eny, enx+1] = 42
-                        path_way.append("E")  # Went east during exploration
+                        path_way.append("W")  # Path from exit: came from west (went east during exploration)
             if path:
                 maze[eny, enx] = 42
             return path, path_way
@@ -225,10 +225,6 @@ class A_Maze_Ing:
                 if height % 2 == 0:
                     height += 1
                 
-                # Update the instance variables with adjusted dimensions
-                self.maze.width = width
-                self.maze.height = height
-                
                 maze, path_way = self.generate_maze(height, width, entry, exit)
                 if not perfect:
                     maze = self.imperfect_maze(maze, height, width, flawed)
@@ -289,26 +285,30 @@ class A_Maze_Ing:
             print(RESET)
     @staticmethod
     def maze_hexadecimal(maze, output_file, height, width, entry_p, exit_p, path_way):
-        path_from_entry_to_exit = list(reversed(path_way))
-        
+        duplicate_path_cells = []
+        for direction in path_way:
+            duplicate_path_cells.append(direction)
+            duplicate_path_cells.append(direction)
         with open(output_file, "w+") as f:
-            for y in range(1, height-1, 2):  
-                row_cells = []
-                for x in range(1, width-1, 2):  
+            
+            for y in range(1, height-1):
+                for x in range(1, width-1):
                     cell_hex = 0
                     if maze[y-1][x] == 1: cell_hex += 1 #North
                     if maze[y+1][x] == 1: cell_hex += 4 #South
                     if maze[y][x+1] == 1: cell_hex += 2 #East
                     if maze[y][x-1] == 1: cell_hex += 8 #West
-                    row_cells.append(hex(cell_hex)[2:].upper())
-                print("".join(row_cells), file=f)
+                    if x < width-2:
+                        print(hex(cell_hex)[2:].upper(), file=f, end="")
+                    else:
+                        print(hex(cell_hex)[2:].upper(), file=f, end="\n")
             enx, eny, = entry_p["x"], entry_p["y"]
             exx, exy, = exit_p["x"], exit_p["y"]
             print(f"\n{enx},{eny}", file=f, end="\n")
             print(f"{exx},{exy}", file=f, end="\n")
-            for direction in path_from_entry_to_exit:
+            for direction in duplicate_path_cells:
                 print(direction, file=f, end="")
-            print(file=f, end="\n")
+            print
             
     def generate_maze(self):
         maze, path_way = self.maze.maze_bringer()
