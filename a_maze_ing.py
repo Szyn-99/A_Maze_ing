@@ -276,7 +276,7 @@ class A_Maze_Ing:
                 print(mapping.get(cell, PATH), end="")
             print(RESET)
     @staticmethod
-    def maze_hexadecimal(maze, output_file, height, width):
+    def maze_hexadecimal(maze, output_file, height, width, entry_p, exit_p):
         with open(output_file, "w+") as f:
             for y in range(1, height-1):
                 for x in range(1, width-1):
@@ -289,11 +289,14 @@ class A_Maze_Ing:
                         print(hex(cell_hex)[2:].upper(), file=f, end="")
                     else:
                         print(hex(cell_hex)[2:].upper(), file=f, end="\n")
-
-                
+            enx, eny, = entry_p
+            exx, exy, = exit_p
+            print("\n")
+            print(f"{enx},{eny}")
+            print(f"{exx},{exy}")
     def generate_maze(self):
         maze = self.maze.maze_bringer()
-        A_Maze_Ing.maze_hexadecimal(maze, self.output_file, self.height, self.width)
+        A_Maze_Ing.maze_hexadecimal(maze, self.output_file, self.height, self.width, self.entry, self.exit)
         A_Maze_Ing.maze_printer(maze)
         
     def print_arguments(self):
