@@ -1,5 +1,5 @@
 from turtle import width
-from amz_parsing import Combining_rules
+# from amz_parsing import Combining_rules
 # import amz_recursive_backtracker as maze
 from sys import argv
 
@@ -292,9 +292,9 @@ class A_Maze_Ing:
         path_from_entry_to_exit = list(reversed(path_way))
         
         with open(output_file, "w+") as f:
-            for y in range(1, height-1, 2):  
+            for y in range(1, height-1 ):  
                 row_cells = []
-                for x in range(1, width-1, 2):  
+                for x in range(1, width-1):  
                     cell_hex = 0
                     if maze[y-1][x] == 1: cell_hex += 1 #North
                     if maze[y+1][x] == 1: cell_hex += 4 #South
