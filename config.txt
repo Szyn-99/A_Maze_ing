@@ -1,8 +1,8 @@
-WIDTH= 10
+WIDTH= 40
 
-HEIGHT= 10
+HEIGHT= 40
 
-EXIT=9,9
+EXIT=3,3
 
 
 # seed must be <= 4294967295 and >= 0
@@ -11,7 +11,7 @@ EXIT=9,9
 SEED=
 
 
-ENTRY=1, 1
+ENTRY=5, 5
 
 
 FLAWED=20

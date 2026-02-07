@@ -1,13 +1,6 @@
-from turtle import width
-# from amz_parsing import Combining_rules
-# import amz_recursive_backtracker as maze
-from sys import argv
-
 import numpy as n
 import sys
 import random
-import matplotlib.colors as mcolors
-import matplotlib.pyplot as plt
 sys.setrecursionlimit(50000)
 
 class A_Maze_Ing:
@@ -106,11 +99,11 @@ class A_Maze_Ing:
         @staticmethod
         def Combining_rules() -> dict:
             try:
-                if len(argv) > 2:
+                if len(sys.argv) > 2:
                     raise ValueError("Too many arguments provided. Only the configuration file path is required.")
-                elif len(argv) < 2:
+                elif len(sys.argv) < 2:
                     raise ValueError("No configuration file provided. Please provide the path to the configuration file.")
-                config_file = argv[1]
+                config_file = sys.argv[1]
                 with open(config_file, "r") as f:
                     config_lines = [line.strip() for line in f]
                 tokens = A_Maze_Ing.Maze_Config_Analyzer.validate_lines(config_lines)
@@ -137,29 +130,25 @@ class A_Maze_Ing:
             for move in directions:
                 if move == "north" and eny > 1 and maze[eny-2, enx] == 1:
                     maze[eny-1, enx] = 0
-                    result = self.recursive_backtracker(maze, enx, eny-2, height, width, exx, exy, path_way)
-                    if result[0]:
+                    if self.recursive_backtracker(maze, enx, eny-2, height, width, exx, exy, path_way)[0]:
                         path = True
                         maze[eny-1, enx] = 42
                         path_way.append("N")  # Went north during exploration
                 elif move == "south" and eny < height - 2 and maze[eny+2, enx] == 1:
                     maze[eny+1, enx] = 0
-                    result = self.recursive_backtracker(maze, enx, eny+2, height, width, exx, exy, path_way)
-                    if result[0]:
+                    if self.recursive_backtracker(maze, enx, eny+2, height, width, exx, exy, path_way)[0]:
                         path = True
                         maze[eny+1, enx] = 42
                         path_way.append("S")  # Went south during exploration
                 elif move == "west" and enx > 1 and maze[eny, enx-2] == 1:
                     maze[eny, enx-1] = 0
-                    result = self.recursive_backtracker(maze, enx-2, eny, height, width, exx, exy, path_way)
-                    if result[0]:
+                    if self.recursive_backtracker(maze, enx-2, eny, height, width, exx, exy, path_way)[0]:
                         path = True
                         maze[eny, enx-1] = 42
                         path_way.append("W")  # Went west during exploration
                 elif move == "east" and enx < width - 2 and maze[eny, enx+2] == 1:
                     maze[eny, enx+1] = 0
-                    result = self.recursive_backtracker(maze, enx+2, eny, height, width, exx, exy, path_way)
-                    if result[0]:
+                    if self.recursive_backtracker(maze, enx+2, eny, height, width, exx, exy, path_way)[0]:
                         path = True
                         maze[eny, enx+1] = 42
                         path_way.append("E")  # Went east during exploration
@@ -173,6 +162,11 @@ class A_Maze_Ing:
             
             entry_x , entry_y = entry_point
             exit_x , exit_y = exit_point
+            
+            if entry_x == 0 or entry_y == 0 or entry_x >= width - 1 or entry_y >= height - 1:
+                raise ValueError(f"Invalid Entry ({entry_x}, {entry_y}): entry cannot be on the maze boundary.")
+            if exit_x == 0 or exit_y == 0 or exit_x >= width - 1 or exit_y >= height - 1:
+                raise ValueError(f"Invalid Exit ({exit_x}, {exit_y}): exit cannot be on the maze boundary.")
             
             exit_x = exit_x if exit_x % 2 != 0 else exit_x + 1
             exit_y = exit_y if exit_y % 2 != 0 else exit_y + 1
@@ -237,35 +231,7 @@ class A_Maze_Ing:
             except Exception as e:
                 print(f"Error: {e}")
                 sys.exit(1)
-            # finally:
-            #     display_maze = n.copy(maze)
-            #     display_maze = display_maze.astype(float)
-            #     display_maze[maze == 42] = 0.5 
-            #     display_maze[maze == 0] = 1.0   
-            #     display_maze[maze == 1] = 0.0  
-                
-            #     # Dynamically calculate figure size based on maze dimensions
-            #     aspect_ratio = width / height
-            #     base_size = 10  # Base size for smaller dimension
-            #     if aspect_ratio > 1:  # Width > Height
-            #         fig_width = base_size * aspect_ratio
-            #         fig_height = base_size
-            #     else:  # Height >= Width
-            #         fig_width = base_size
-            #         fig_height = base_size / aspect_ratio
-                
-            #     plt.figure(figsize=(fig_width, fig_height))
-            #     cmap = mcolors.ListedColormap(['black', 'lime', 'white'])
-            #     bounds = [0, 0.25, 0.75, 1.0]
-            #     norm = mcolors.BoundaryNorm(bounds, cmap.N)
-                
-            #     plt.imshow(display_maze, cmap=cmap, norm=norm) 
-                
-            #     plt.title(f"Maze {maze.shape[1]}x{maze.shape[0]} (Green = Path)")
-            #     plt.axis('off') 
-                
-            #     plt.savefig("maaaze.png")
-            #     print(f"Maze visualization saved to maaaze.png")
+
     @staticmethod
     def maze_printer(maze):
         
@@ -292,9 +258,9 @@ class A_Maze_Ing:
         path_from_entry_to_exit = list(reversed(path_way))
         
         with open(output_file, "w+") as f:
-            for y in range(1, height-1 ):  
+            for y in range(1, height-1 , 2):  
                 row_cells = []
-                for x in range(1, width-1):  
+                for x in range(1, width-1, 2):  
                     cell_hex = 0
                     if maze[y-1][x] == 1: cell_hex += 1 #North
                     if maze[y+1][x] == 1: cell_hex += 4 #South
