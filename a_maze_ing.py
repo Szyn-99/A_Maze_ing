@@ -117,7 +117,25 @@ class A_Maze_Ing:
     class Recursive_Backtracker:
         def __init__(self, maze):
             self.maze = maze 
-        
+        def pattern_42(self):
+            return {(0,0), (2,0), (0,1), (2,1), (0,2), (1,2), (2,2), (2,3), (2,4), (4,0), (5,0), (6,0), (6,1), (4,2), (5,2), (6,2), (4,3), (4,4), (5,4), (6,4)}         # '2'
+        def shape_patter_42(self, maze):
+            pattern = self.pattern_42()
+            pattern_height = max(y for _, y in pattern) + 1
+            pattern_width = max(x for x, _ in pattern) + 1
+            half_grid_h = (maze.shape[0] - 1) // 2
+            half_grid_w = (maze.shape[1] - 1) // 2
+            
+            entry_tuple = (self.maze.entry["x"], self.maze.entry["y"])
+            exit_tuple = (self.maze.exit["x"], self.maze.exit["y"])
+            for y in range (1, half_grid_h - pattern_height):
+                for x in range (1, half_grid_w - pattern_width):
+                    possible_cells = {(x + pattern_x, y + pattern_y) for pattern_x, pattern_y in pattern}
+                    if entry_tuple not in possible_cells and exit_tuple not in possible_cells:
+                        return x, y
+            raise ValueError(f"Cannot shape the pattern, Maze is too small ({self.maze.height}, {self.maze.width})")
+            
+            
         def grid_creator(self, height: int, width: int) -> n.ndarray:
             maze = n.ones((height, width), dtype=int)
             return maze
@@ -180,6 +198,14 @@ class A_Maze_Ing:
             
             exit_x = min(exit_x, width - 2)
             exit_y = min(exit_y, height - 2)
+            valid_point = self.shape_patter_42(maze)
+            if valid_point:
+                pattern = self.pattern_42()
+                x, y = valid_point
+                for pattern_x, pattern_y in pattern:
+                    valid_cell_x = (x + pattern_x) * 2 + 1
+                    valid_cell_y = (y + pattern_y) * 2 + 1
+                    maze[valid_cell_y, valid_cell_x] = 0xf
             path_way = []
             self.recursive_backtracker(maze, entry_x, entry_y, height, width, exit_x, exit_y, path_way)
             maze[entry_y, entry_x] = 0xE
@@ -219,7 +245,7 @@ class A_Maze_Ing:
                 if height % 2 == 0:
                     height += 1
                 
-                # Update the instance variables with adjusted dimensions
+                
                 self.maze.width = width
                 self.maze.height = height
                 

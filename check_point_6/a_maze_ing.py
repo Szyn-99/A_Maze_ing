@@ -1,63 +1,9 @@
 import numpy as n
 import sys
-import os
-import time
 import random
-from typing import Tuple, Set
+import time
 sys.setrecursionlimit(50000)
-"""this module is for reference"""
-# ── 42 pattern ────────────────────────────────────────────────
-PATTERN_42: Set[Tuple[int, int]] = (
-    {(0,0), (2,0), (0,1), (2,1), (0,2), (1,2), (2,2), (2,3), (2,4)} |                     # '4'
-    {(4,0), (5,0), (6,0), (6,1), (4,2), (5,2), (6,2), (4,3), (4,4), (5,4), (6,4)}         # '2'
-)
-PATTERN_W = max(x for x, _ in PATTERN_42) + 1
-PATTERN_H = max(y for _, y in PATTERN_42) + 1
 
-def find_42_position(cell_w, cell_h, entry_cell, exit_cell):
-    # Start from 1 and end 1 early so pattern walls never touch the outer boundary
-    for sy in range(1, cell_h - PATTERN_H):
-        for sx in range(1, cell_w - PATTERN_W):
-            cells = {(sx + ox, sy + oy) for ox, oy in PATTERN_42}
-            if entry_cell not in cells and exit_cell not in cells:
-                return (sx, sy)
-    return None
-
-
-# ── ANSI helpers ──────────────────────────────────────────────
-RESET = "\033[0m"
-WALL  = "\033[40m  "
-PATH  = "\033[48;5;254m  "
-SYM   = "\033[48;5;250m░░"
-START = "\033[48;5;129m  "
-END   = "\033[48;5;196m  "
-ANIM_PATH = "\033[48;5;82m  "     # bright green for path animation
-
-MAPPING = {0: PATH, 1: WALL, 0xE: START, 0xE2: END, 42: SYM, 0xF: PATH}
-
-HIDE_CURSOR = "\033[?25l"
-SHOW_CURSOR = "\033[?25h"
-
-def move_to(row, col):
-    return f"\033[{row};{col}H"
-
-def print_full_maze(maze):
-    """Print the entire maze once (initial frame)."""
-    sys.stdout.write(HIDE_CURSOR)
-    sys.stdout.write("\033[2J\033[H")  # clear screen
-    for row in maze:
-        for cell in row:
-            sys.stdout.write(MAPPING.get(cell, PATH))
-        sys.stdout.write(RESET + "\n")
-    sys.stdout.flush()
-
-def animate_cell(gy, gx, color):
-    """Overwrite a single cell on screen with the given color."""
-    sys.stdout.write(move_to(gy + 1, gx * 2 + 1))  # +1 because terminal is 1-indexed, *2 because each cell is 2 chars
-    sys.stdout.write(color + RESET)
-    sys.stdout.flush()
-
-# ── Maze generation (mirrors a_maze_ing.py) ───────────────────
 class A_Maze_Ing:
     def __init__(self):
         tokens = self.Maze_Config_Analyzer.Combining_rules()
@@ -73,7 +19,7 @@ class A_Maze_Ing:
 
     class Maze_Config_Analyzer:
         @staticmethod
-        def comment_lines_trigger(line: str) -> bool:
+        def comment_lines_trigger(line: str ) -> bool:
             return line is None or line == "" or line[0] == "#"
         @staticmethod
         def empty_outputf_trigger(output_file: str) -> bool:
@@ -85,9 +31,9 @@ class A_Maze_Ing:
             return True
         @staticmethod
         def validate_lines(config_lines: list[str]) -> dict[str:int | str]:
-            tokens_to_return = {"WIDTH": 0, "HEIGHT": 0, "EXIT": {"x": 0, "y": 0}, "ENTRY": {"x": 0, "y": 0}, "OUTPUT_FILE": None, "PERFECT": 0, "FLAWED": 0, "SEED": None}
-            tokens_count = {"WIDTH": 0, "HEIGHT": 0, "EXIT": 0, "ENTRY": 0, "OUTPUT_FILE": 0, "PERFECT": 0, "FLAWED": 0, "SEED": 0}
-            tokens_name = ["WIDTH", "HEIGHT", "EXIT", "ENTRY", "OUTPUT_FILE", "PERFECT", "FLAWED", "SEED"]
+            tokens_to_return = {"WIDTH": 0, "HEIGHT": 0, "EXIT": {"x": 0, "y": 0},"ENTRY": {"x": 0, "y": 0}, "OUTPUT_FILE": None, "PERFECT": 0, "FLAWED": 0, "SEED": None}
+            tokens_count = {"WIDTH": 0, "HEIGHT": 0, "EXIT": 0,"ENTRY": 0, "OUTPUT_FILE": 0, "PERFECT": 0, "FLAWED": 0, "SEED": 0}
+            tokens_name = ["WIDTH", "HEIGHT", "EXIT","ENTRY", "OUTPUT_FILE", "PERFECT", "FLAWED", "SEED"]
             for line in config_lines:
                 if A_Maze_Ing.Maze_Config_Analyzer.comment_lines_trigger(line):
                     continue
@@ -140,17 +86,17 @@ class A_Maze_Ing:
             width = config_tokens["WIDTH"]
             height = config_tokens["HEIGHT"]
             if A_Maze_Ing.Maze_Config_Analyzer.empty_outputf_trigger(config_tokens["OUTPUT_FILE"]) and not None:
-                raise ValueError("Output file name cannot be Empty/None.")
-            if config_tokens["PERFECT"] not in ("True", "False") and not None:
-                raise ValueError("Acceptable 'Perfect' format is 'True' or 'False'.")
+                raise ValueError ("Output file name cannot be Empty/None.")
+            if config_tokens["PERFECT"] not in ("True" ,"False") and not None:
+                raise ValueError ("Acceptable 'Perfect' format is 'True' or 'False'.")
             if config_tokens['ENTRY']['x'] >= width or config_tokens["ENTRY"]["y"] >= height:
                 raise ValueError(f'Invalid Entry: ({config_tokens["ENTRY"]["x"]}, {config_tokens["ENTRY"]["y"]}), width/height=({width}, {height})')
             if config_tokens["EXIT"]["x"] >= width or config_tokens["EXIT"]["y"] >= height:
                 raise ValueError(f'Invalid Exit: ({config_tokens["EXIT"]["x"]}, {config_tokens["EXIT"]["y"]}), width/height=({width}, {height})')
             if config_tokens['ENTRY']['x'] == config_tokens['EXIT']['x'] and config_tokens['ENTRY']['y'] == config_tokens['EXIT']['y']:
                 raise ValueError(f"Entry and Exit cannot share the same point: "
-                                 f"Entry=({config_tokens['ENTRY']['x']}, {config_tokens['ENTRY']['y']}), "
-                                 f"Exit=({config_tokens['EXIT']['x']}, {config_tokens['EXIT']['y']})")
+                                f"Entry=({config_tokens['ENTRY']['x']}, {config_tokens['ENTRY']['y']}), "
+                                f"Exit=({config_tokens['EXIT']['x']}, {config_tokens['EXIT']['y']})")
         @staticmethod
         def Combining_rules() -> dict:
             try:
@@ -167,108 +113,130 @@ class A_Maze_Ing:
             except Exception as e:
                 print("An Error Occured:")
                 print(f"\nType: {e.__class__.__name__}\nDetails: {e}")
-                sys.exit(1)
-
+                sys.exit(1)  
+                
     class Recursive_Backtracker:
         def __init__(self, maze):
-            self.maze = maze
-
+            self.maze = maze 
+        def pattern_42(self):
+            return {(0,0), (2,0), (0,1), (2,1), (0,2), (1,2), (2,2), (2,3), (2,4), (4,0), (5,0), (6,0), (6,1), (4,2), (5,2), (6,2), (4,3), (4,4), (5,4), (6,4)}         # '2'
+        def shape_patter_42(self, maze):
+            pattern = self.pattern_42()
+            pattern_height = max(y for _, y in pattern) + 1
+            pattern_width = max(x for x, _ in pattern) + 1
+            half_grid_h = (maze.shape[0] - 1) // 2
+            half_grid_w = (maze.shape[1] - 1) // 2
+            
+            entry_p = (self.maze.entry["x"], self.maze.entry["y"])
+            exit_p = (self.maze.exit["x"], self.maze.exit["y"])
+            for y in range (1, half_grid_h - pattern_height):
+                for x in range (1, half_grid_w - pattern_width):
+                    possible_cells = {(x + pattern_x, y + pattern_y) for pattern_x, pattern_y in pattern}
+                    if entry_p not in possible_cells and exit_p not in possible_cells:
+                        return x, y
+            raise ValueError(f"Cannot shape the pattern, Maze is too small ({self.maze.height}, {self.maze.width})")
+            
+            
         def grid_creator(self, height: int, width: int) -> n.ndarray:
-            return n.ones((height, width), dtype=int)
-
+            maze = n.ones((height, width), dtype=int)
+            return maze
+        
         def recursive_backtracker(self, maze, enx, eny, height, width, exx, exy, path_way):
             maze[eny, enx] = 0
             path = (enx, eny) == (exx, exy)
             directions = ["north", "south", "west", "east"]
             random.shuffle(directions)
             for move in directions:
-                if move == "north" and eny > 1 and maze[eny-2, enx] == 1 and maze[eny-1, enx] != 0xF:
+                if move == "north" and eny > 1 and maze[eny-2, enx] == 1:
                     maze[eny-1, enx] = 0
                     if self.recursive_backtracker(maze, enx, eny-2, height, width, exx, exy, path_way)[0]:
                         path = True
                         maze[eny-1, enx] = 42
-                        path_way.append("N")
-                elif move == "south" and eny < height - 2 and maze[eny+2, enx] == 1 and maze[eny+1, enx] != 0xF:
+                        path_way.append("N")  # Went north during exploration
+                elif move == "south" and eny < height - 2 and maze[eny+2, enx] == 1:
                     maze[eny+1, enx] = 0
                     if self.recursive_backtracker(maze, enx, eny+2, height, width, exx, exy, path_way)[0]:
                         path = True
                         maze[eny+1, enx] = 42
-                        path_way.append("S")
-                elif move == "west" and enx > 1 and maze[eny, enx-2] == 1 and maze[eny, enx-1] != 0xF:
+                        path_way.append("S")  # Went south during exploration
+                elif move == "west" and enx > 1 and maze[eny, enx-2] == 1:
                     maze[eny, enx-1] = 0
                     if self.recursive_backtracker(maze, enx-2, eny, height, width, exx, exy, path_way)[0]:
                         path = True
                         maze[eny, enx-1] = 42
-                        path_way.append("W")
-                elif move == "east" and enx < width - 2 and maze[eny, enx+2] == 1 and maze[eny, enx+1] != 0xF:
+                        path_way.append("W")  # Went west during exploration
+                elif move == "east" and enx < width - 2 and maze[eny, enx+2] == 1:
                     maze[eny, enx+1] = 0
                     if self.recursive_backtracker(maze, enx+2, eny, height, width, exx, exy, path_way)[0]:
                         path = True
                         maze[eny, enx+1] = 42
-                        path_way.append("E")
+                        path_way.append("E")  # Went east during exploration
             if path:
                 maze[eny, enx] = 42
             return path, path_way
-
-        def generate_maze(self, height, width, entry_point, exit_point):
+        
+        def generate_maze(self, height: int, width: int, entry_point: tuple, exit_point: tuple) -> n.ndarray:
+    
             maze = self.grid_creator(height, width)
-            entry_x, entry_y = entry_point
-            exit_x, exit_y = exit_point
-
+            
+            entry_x , entry_y = entry_point
+            exit_x , exit_y = exit_point
+            
             if entry_x == 0 or entry_y == 0 or entry_x >= width - 1 or entry_y >= height - 1:
                 raise ValueError(f"Invalid Entry ({entry_x}, {entry_y}): entry cannot be on the maze boundary.")
             if exit_x == 0 or exit_y == 0 or exit_x >= width - 1 or exit_y >= height - 1:
                 raise ValueError(f"Invalid Exit ({exit_x}, {exit_y}): exit cannot be on the maze boundary.")
-
+            
             exit_x = exit_x if exit_x % 2 != 0 else exit_x + 1
             exit_y = exit_y if exit_y % 2 != 0 else exit_y + 1
+
+
             entry_x = entry_x if entry_x % 2 != 0 else entry_x + 1
             entry_y = entry_y if entry_y % 2 != 0 else entry_y + 1
+            
             entry_x = min(entry_x, width - 2)
             entry_y = min(entry_y, height - 2)
+            
             exit_x = min(exit_x, width - 2)
             exit_y = min(exit_y, height - 2)
-
-            # Stamp the 42 pattern BEFORE carving so the backtracker treats it as walls
-            cell_w, cell_h = (width - 1) // 2, (height - 1) // 2
-            entry_cell = (entry_x // 2, entry_y // 2)
-            exit_cell = (exit_x // 2, exit_y // 2)
-            anchor = find_42_position(cell_w, cell_h, entry_cell, exit_cell)
-            if anchor:
-                ax, ay = anchor
-                for ox, oy in PATTERN_42:
-                    gx, gy = (ax + ox) * 2 + 1, (ay + oy) * 2 + 1
-                    maze[gy, gx] = 0xF
-
+            valid_point = self.shape_patter_42(maze)
+            if valid_point:
+                pattern = self.pattern_42()
+                x, y = valid_point
+                for pattern_x, pattern_y in pattern:
+                    valid_cell_x = (x + pattern_x) * 2 + 1
+                    valid_cell_y = (y + pattern_y) * 2 + 1
+                    maze[valid_cell_y, valid_cell_x] = 0xf
             path_way = []
             self.recursive_backtracker(maze, entry_x, entry_y, height, width, exit_x, exit_y, path_way)
             maze[entry_y, entry_x] = 0xE
             maze[exit_y, exit_x] = 0xE2
-
-            return maze, path_way, (entry_x, entry_y), (exit_x, exit_y), anchor
-
+            
+            
+            return maze, path_way
+        
         def imperfect_maze(self, maze, height, width, flawed):
             removeable_walls = []
             for y in range(1, height - 1):
                 for x in range(1, width - 1):
-                    if maze[y, x] == 1:
+                    if(maze[y,x] == 1):
                         if (maze[y+1, x] == 0 and maze[y-1, x] == 0) or (maze[y, x+1] == 0 and maze[y, x-1] == 0):
-                            removeable_walls.append((y, x))
+                            removeable_walls.append((y,x))
             random.shuffle(removeable_walls)
             for y, x in removeable_walls[:flawed]:
                 maze[y, x] = 0
             return maze
-
+        
         def maze_bringer(self):
             try:
-                entry = (self.maze.entry["x"], self.maze.entry["y"])
-                exit = (self.maze.exit["x"], self.maze.exit["y"])
+                entry  = (self.maze.entry["x"], self.maze.entry["y"],)
+                exit = (self.maze.exit["x"], self.maze.exit["y"],)
                 perfect = True if 'True' in self.maze.perfect else False
                 flawed = self.maze.flawed
                 seed = self.maze.seed
                 height = self.maze.height
                 width = self.maze.width
-
+                
                 if flawed is None:
                     flawed = 0
                 if seed is not None:
@@ -277,97 +245,80 @@ class A_Maze_Ing:
                     width += 1
                 if height % 2 == 0:
                     height += 1
-
+                
+                
                 self.maze.width = width
                 self.maze.height = height
-
-                maze, path_way, entry_grid, exit_grid, anchor = self.generate_maze(height, width, entry, exit)
+                
+                maze, path_way = self.generate_maze(height, width, entry, exit)
                 if not perfect:
                     maze = self.imperfect_maze(maze, height, width, flawed)
-
-                return maze, path_way, entry_grid, exit_grid, anchor
+                
+                return maze, path_way
             except Exception as e:
                 print(f"Error: {e}")
                 sys.exit(1)
 
     @staticmethod
+    def maze_printer(maze):
+        
+        reset = "\x1b[0m"
+        wall  = "\x1b[40m  "           
+        path  = "\x1b[48;5;15m  "    
+        sol   = "\x1b[48;5;99m░░"
+        start = "\x1b[48;5;129m  "    
+        end   = "\x1b[48;5;196m  "
+        
+        mapping = {
+            0: path,
+            1: wall,
+            0xE: start,
+            0xE2: end,
+            42: path
+        }
+        for row in maze:
+            for cell in row:
+                print(mapping.get(cell, path), end="")
+            print(reset)
+
+        print(f"\033[{len(maze)}A", end="")
+        for row in maze:
+            for cell in row:
+                if cell == 42:
+                    time.sleep(0.02)
+                    print(sol, end="", flush=True)
+                else:
+                    print(f"\033[2C", end="")
+            print()
+        print(reset)
+    @staticmethod
     def maze_hexadecimal(maze, output_file, height, width, entry_p, exit_p, path_way):
         path_from_entry_to_exit = list(reversed(path_way))
+        
         with open(output_file, "w+") as f:
-            for y in range(1, height-1, 2):
+            for y in range(1, height-1 , 2):  
                 row_cells = []
-                for x in range(1, width-1, 2):
-                    if maze[y][x] == 0xF:
-                        row_cells.append('F')
-                        continue
+                for x in range(1, width-1, 2):  
                     cell_hex = 0
-                    if maze[y-1][x] in (1, 0xF): cell_hex += 1
-                    if maze[y+1][x] in (1, 0xF): cell_hex += 4
-                    if maze[y][x+1] in (1, 0xF): cell_hex += 2
-                    if maze[y][x-1] in (1, 0xF): cell_hex += 8
+                    if maze[y-1][x] == 1: cell_hex += 1 #North
+                    if maze[y+1][x] == 1: cell_hex += 4 #South
+                    if maze[y][x+1] == 1: cell_hex += 2 #East
+                    if maze[y][x-1] == 1: cell_hex += 8 #West
                     row_cells.append(hex(cell_hex)[2:].upper())
                 print("".join(row_cells), file=f)
-            enx, eny = entry_p["x"], entry_p["y"]
-            exx, exy = exit_p["x"], exit_p["y"]
+            enx, eny, = entry_p["x"], entry_p["y"]
+            exx, exy, = exit_p["x"], exit_p["y"]
             print(f"\n{enx},{eny}", file=f, end="\n")
             print(f"{exx},{exy}", file=f, end="\n")
             for direction in path_from_entry_to_exit:
                 print(direction, file=f, end="")
             print(file=f, end="\n")
-
-    # ── Animation entry point ─────────────────────────────────
+            
     def generate_maze(self):
-        maze, path_way, entry_grid, exit_grid, anchor = self.maze.maze_bringer()
-        height, width = self.height, self.width
-
-        # ── Phase 0: print maze hiding path ────────────────
-        display = n.copy(maze)
-        for y in range(height):
-            for x in range(width):
-                if display[y, x] == 42:
-                    display[y, x] = 0
-
-        print_full_maze(display)
-        time.sleep(0.5)
-
-        # ── Phase 1: animate the solution path ────────────────
-        path_from_entry = list(reversed(path_way))
-        gy, gx = entry_grid[1], entry_grid[0]
-        DIR_DELTA = {"N": (-2, 0), "S": (2, 0), "W": (0, -2), "E": (0, 2)}
-
-        speed = max(0.005, min(0.08, 3.0 / (len(path_from_entry) + 1)))
-
-        for direction in path_from_entry:
-            dy, dx = DIR_DELTA[direction]
-            wy, wx = gy + dy // 2, gx + dx // 2
-            animate_cell(wy, wx, ANIM_PATH)
-            time.sleep(speed)
-            gy, gx = gy + dy, gx + dx
-            animate_cell(gy, gx, ANIM_PATH)
-            time.sleep(speed)
-
-        time.sleep(0.6)
-
-        # ── Phase 2: settle path to final color ───────────────
-        gy, gx = entry_grid[1], entry_grid[0]
-        for direction in path_from_entry:
-            dy, dx = DIR_DELTA[direction]
-            wy, wx = gy + dy // 2, gx + dx // 2
-            animate_cell(wy, wx, SYM)
-            gy, gx = gy + dy, gx + dx
-            animate_cell(gy, gx, SYM)
-
-        animate_cell(entry_grid[1], entry_grid[0], START)
-        animate_cell(exit_grid[1], exit_grid[0], END)
-        time.sleep(0.4)
-
-        # ── Done ──────────────────────────────────────────────
-        sys.stdout.write(move_to(height + 2, 1))
-        sys.stdout.write(SHOW_CURSOR)
-        sys.stdout.flush()
-
-        A_Maze_Ing.maze_hexadecimal(maze, self.output_file, height, width, self.entry, self.exit, path_way)
-
+        maze, path_way = self.maze.maze_bringer()
+        A_Maze_Ing.maze_hexadecimal(maze, self.output_file, self.height, self.width, self.entry, self.exit, path_way)
+        A_Maze_Ing.maze_printer(maze)
+        
     def print_arguments(self):
         print(f"Height: {self.height}")
         print(f"Width: {self.width}")
@@ -377,8 +328,9 @@ class A_Maze_Ing:
         print(f"Seed: {self.seed}")
         print(f"Perfect: {self.perfect}")
         print(f"Flawed: {self.flawed}")
-
-
+        
+            
 if __name__ == "__main__":
     maze = A_Maze_Ing()
+    # maze.print_arguments()
     maze.generate_maze()
