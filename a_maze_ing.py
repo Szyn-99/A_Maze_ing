@@ -2,7 +2,6 @@ import numpy as n
 import sys
 import random
 from typing import Any, List, Dict, Union, Optional
-from collections import deque
 
 class A_Maze_Ing:
     def __init__(self):
@@ -61,7 +60,7 @@ class A_Maze_Ing:
                                 raise ValueError(f"Invalid {key}: '{value}' is not a valid integer")
 
                         case "OUTPUT_FILE":
-                            if len(value.split()) > 1:
+                            if len(value.split()) > 1 or value == "":
                                 raise ValueError(f"Invalid file name: {value}")
                             tokens[key] = value
 
@@ -200,40 +199,29 @@ class A_Maze_Ing:
             for y, x in removeable_walls[:flawed]:
                 maze[y, x] = 0
             return maze
-    class BFSPathfinder:    
-        def __init__(self, maze: n.ndarray):
-            self.maze = maze
-            self.height, self.width = maze.shape
-            
-            self.DIRECTIONS = {
-                0: (0, -1, 'N'),
-                1: (1, 0, 'E'),
-                2: (0, 1, 'S'),
-                3: (-1, 0, 'W'),
-            }
-        
-        def find_path(self, start_x: int, start_y: int, end_x: int, end_y: int) -> str:        
-            queue = deque([(start_x, start_y, "")])
-            visited = {(start_x, start_y)}
-            
+
+        def BFS(self, maze, enx: int, eny: int, exx: int, exy: int) -> str:
+            directions = {0: (0, -1, 'N'), 1: (1, 0, 'E'), 2: (0, 1, 'S'), 3: (-1, 0, 'W')} 
+            queue = [(enx, eny, "")]
+            visited = {(enx, eny)}
+            height, width = maze.shape
             while queue:
-                x, y, path = queue.popleft()
+                x, y, path = queue.pop(0)
                 
-                if (x, y) == (end_x, end_y):
+                if (x, y) == (exx, exy):
                     return path
                 
-                for direction, (dx, dy, letter) in self.DIRECTIONS.items():
-                    has_wall = bool(self.maze[y, x] & (1 << direction))
-                    
-                    if not has_wall:
+                for direction, (dx, dy, compass) in directions.items():
+
+                    if not bool(self.maze[y, x] & (0x1 << direction)):
                         nx, ny = x + dx, y + dy
                         
-                        if (0 <= nx < self.width and 
-                            0 <= ny < self.height and
+                        if (0 < nx < width and 
+                            0 < ny < height and
                             (nx, ny) not in visited):
-                            
+
                             visited.add((nx, ny))
-                            queue.append((nx, ny, path + letter))
+                            queue.append((nx, ny, path + compass))
             
             return ""
                     
