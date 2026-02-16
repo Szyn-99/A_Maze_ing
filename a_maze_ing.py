@@ -1,100 +1,24 @@
 import numpy as n
 import sys
 import random
-sys.setrecursionlimit(50000)
+from typing import Any, List, Dict, Union, Optional
 
 class A_Maze_Ing:
     def __init__(self):
-        tokens = self.Maze_Config_Analyzer.Combining_rules()
-        self.width = tokens["WIDTH"]
-        self.height = tokens["HEIGHT"]
-        self.entry = tokens["ENTRY"]
-        self.exit = tokens["EXIT"]
-        self.output_file = tokens["OUTPUT_FILE"]
-        self.seed = tokens["SEED"]
-        self.perfect = tokens["PERFECT"]
-        self.flawed = tokens["FLAWED"]
+        self.tokens = self.Maze_Config_Analyzer.parsing_config_data()
+        self.width = self.tokens["WIDTH"]
+        self.height = self.tokens["HEIGHT"]
+        self.entry = self.tokens["ENTRY"]
+        self.exit = self.tokens["EXIT"]
+        self.output_file = self.tokens["OUTPUT_FILE"]
+        self.seed = self.tokens["SEED"]
+        self.perfect = self.tokens["PERFECT"]
+        self.flawed = self.tokens["FLAWED"]
         self.maze = self.Recursive_Backtracker(self)
 
     class Maze_Config_Analyzer:
         @staticmethod
-        def is_empty(output_file: str) -> bool:
-            for i in output_file:
-                if i != " ":
-                    return False
-            return True
-        @staticmethod
-        def validate_lines(config_lines: list[str]) -> dict[str, int | str | dict | None]:
-            tokens = {
-                "WIDTH": 0,
-                "HEIGHT": 0,
-                "EXIT": {"x": 0, "y": 0},
-                "ENTRY": {"x": 0, "y": 0},
-                "OUTPUT_FILE": None,
-                "PERFECT": 0,
-                "FLAWED": 0,
-                "SEED": None,
-            }
-
-            counts = {key: 0 for key in tokens}
-
-            for line in config_lines:
-                if line is None or line == "" or line[0] == "#" or "=" not in line:
-                    continue
-
-                key, value = map(str.strip, line.split("=", 1))
-                if key not in tokens or value == "":
-                    continue
-
-                counts[key] += 1
-
-                match key:
-                    case "WIDTH" | "HEIGHT":
-                        tokens[key] = int(value)
-
-                    case "OUTPUT_FILE":
-                        if len(value.split()) > 1:
-                            raise ValueError(f"Invalid file name: {value}")
-                        tokens[key] = value
-
-                    case "PERFECT":
-                        if value not in ("True" ,"False"):
-                            raise ValueError ("Acceptable 'PERFECT' format is 'True' or 'False'.")
-                        tokens[key] = True if value == "True" else False
-
-                    case "EXIT" | "ENTRY":
-                        x, y = map(int, value.split(","))
-                        tokens[key] = {"x": x, "y": y}
-
-                    case "FLAWED" | "SEED":
-                        try:
-                            tokens[key] = int(value)
-                        except ValueError:
-                            tokens[key] = None
-
-            for key, value_count in counts.items():
-                if value_count > 1:
-                    raise ValueError(f"Duplicate token detected: {key}")
-                elif value_count <= 0 and key is not "SEED" or key is not "FLAWED":
-                    raise ValueError(f"Missing required keys: {key}")
-             
-            for key in tokens:
-                match key:
-                    case  "WIDTH" | "HEIGHT":
-                        if tokens[key] <= 0 or tokens[key] <= 0:
-                            raise ValueError(f"Impossible maze dimensions: ({tokens[key]["x"], tokens[key]["y"]})")
-                    case  "EXIT" | "ENTRY":
-                        if tokens[key]["x"] < 0 or tokens[key]["y"] < 0:
-                            raise ValueError(f"Unlogical maze {key}: ({tokens[key]["x"], tokens[key]["y"]})")
-                        if tokens["WIDTH"] <= tokens[key]["x"] or tokens["HEIGHT"] <= tokens[key]["y"]:
-                            raise ValueError(f"Invalid maze {key}: ({tokens[key]["x"], tokens[key]["y"]})")
-                        if tokens["ENTRY"]["x"] == tokens["EXIT"]["x"] and tokens["ENTRY"]["y"] == tokens["EXIT"]["y"]:
-                            raise ValueError(f"'ENTRY' and 'EXIT cannot share the same coordinates")
-                    
-            return tokens
-
-        @staticmethod
-        def Combining_rules(self) -> dict:
+        def parsing_config_data() -> dict[str, Union[str, int, None]]:
             try:
                 if len(sys.argv) > 2:
                     raise ValueError("Too many arguments provided. Only the configuration file path is required.")
@@ -103,18 +27,83 @@ class A_Maze_Ing:
                 config_file = sys.argv[1]
                 with open(config_file, "r") as f:
                     config_lines = [line.strip() for line in f]
-                tokens = self.Maze_Config_Analyzer.validate_lines(config_lines)
+                tokens = {
+                    "WIDTH": 0,
+                    "HEIGHT": 0,
+                    "EXIT": {"x": 0, "y": 0},
+                    "ENTRY": {"x": 0, "y": 0},
+                    "OUTPUT_FILE": None,
+                    "PERFECT": 0,
+                    "FLAWED": None,
+                    "SEED": None,
+                }
+
+                counts = {key: 0 for key in tokens}
+
+                for line in config_lines:
+                    if line is None or line == "" or line[0] == "#" or "=" not in line:
+                        continue
+
+                    key, value = map(str.strip, line.split("=", 1))
+                    if key not in tokens or value == "":
+                        continue
+
+                    counts[key] += 1
+
+                    match key:
+                        case "WIDTH" | "HEIGHT":
+                            try:
+                                tokens[key] = int(value)
+                            except ValueError:
+                                tokens[key] = 0
+
+                        case "OUTPUT_FILE":
+                            if len(value.split()) > 1:
+                                raise ValueError(f"Invalid file name: {value}")
+                            tokens[key] = value
+
+                        case "PERFECT":
+                            if value not in ("True" ,"False"):
+                                raise ValueError ("Acceptable 'PERFECT' format is 'True' or 'False'.")
+                            tokens[key] = True if value == "True" else False
+
+                        case "EXIT" | "ENTRY":
+                            x, y = map(int, value.split(","))
+                            tokens[key] = {"x": x, "y": y}
+
+                        case "FLAWED" | "SEED":
+                            try:
+                                tokens[key] = int(value)
+                            except ValueError:
+                                tokens[key] = None
+
+                for key, value_count in counts.items():
+                    if value_count > 1:
+                        raise ValueError(f"Duplicate token detected: {key}")
+                    elif value_count <= 0:
+                        if key == "FLAWED" or key == "SEED":
+                            raise ValueError(f"Missing optional keys: {key}, use 'None' to discard")
+                        else:
+                            raise ValueError(f"Missing required keys: {key}")
+                
+                for key in tokens:
+                    match key:
+                        case  "WIDTH" | "HEIGHT":
+                            if tokens[key] <= 0 or tokens[key] <= 0:
+                                raise ValueError(f"Impossible maze dimensions: ({key} = {tokens[key]})")
+                        case  "EXIT" | "ENTRY":
+                            if tokens[key]["x"] < 0 or tokens[key]["y"] < 0:
+                                raise ValueError(f"Unlogical maze {key}: ({tokens[key]['x'], tokens[key]['y']})")
+                            if tokens["WIDTH"] <= tokens[key]["x"] or tokens["HEIGHT"] <= tokens[key]["y"]:
+                                raise ValueError(f"Invalid maze {key}: ({tokens[key]['x'], tokens[key]['y']})")
+                            if tokens["ENTRY"]["x"] == tokens["EXIT"]["x"] and tokens["ENTRY"]["y"] == tokens["EXIT"]["y"]:
+                                raise ValueError(f"'ENTRY' and 'EXIT' cannot share the same coordinates")
+                        
                 return tokens
             except Exception as e:
-                print("An Error Occured: ->", end=" ")
-                print(f"Type: {e.__class__.__name__} Details: {e}")
-                sys.exit(1)  
-        def print_tokens(tokens: dict) -> None:
-            for tok in tokens:
-                print(f"{tok} -> {tokens[tok]}")
-    def generate_maze(self):
-        tokens = self.Maze_Config_Analyzer.Combining_rules()
-        self.Maze_Config_Analyzer.print_tokens(tokens)
+                print(f"Config Error: {e}")
+                sys.exit(1)
+
     class Recursive_Backtracker:
         def __init__(self, maze):
             self.maze = maze 
@@ -176,7 +165,7 @@ class A_Maze_Ing:
                 maze[eny, enx] = 42
             return path, path_way
         
-        def generate_maze(self, height: int, width: int, entry_point: tuple, exit_point: tuple) -> n.ndarray:
+        def maze_entry(self) -> n.ndarray:
     
             maze = self.grid_creator(height, width)
             
@@ -215,37 +204,7 @@ class A_Maze_Ing:
                 maze[y, x] = 0
             return maze
         
-        def maze_bringer(self):
-            try:
-                entry  = (self.maze.entry["x"], self.maze.entry["y"],)
-                exit = (self.maze.exit["x"], self.maze.exit["y"],)
-                perfect = True if 'True' in self.maze.perfect else False
-                flawed = self.maze.flawed
-                seed = self.maze.seed
-                height = self.maze.height
-                width = self.maze.width
-                
-                if flawed is None:
-                    flawed = 0
-                if seed is not None:
-                    random.seed(seed)
-                if width % 2 == 0:
-                    width += 1
-                if height % 2 == 0:
-                    height += 1
-                
-                
-                self.maze.width = width
-                self.maze.height = height
-                
-                maze, path_way = self.generate_maze(height, width, entry, exit)
-                if not perfect:
-                    maze = self.imperfect_maze(maze, height, width, flawed)
-                
-                return maze, path_way
-            except Exception as e:
-                print(f"Error: {e}")
-                sys.exit(1)
+        
 
     @staticmethod
     def maze_printer(maze):
@@ -307,4 +266,4 @@ class A_Maze_Ing:
 if __name__ == "__main__":
     maze = A_Maze_Ing()
     # maze.print_arguments()
-    maze.generate_maze()
+    maze.print_arguments()
