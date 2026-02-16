@@ -1,4 +1,4 @@
-WIDTH= 40
+WIDTH= 6
 
 HEIGHT= 40
 
