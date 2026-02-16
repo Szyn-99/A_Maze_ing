@@ -54,8 +54,10 @@ class A_Maze_Ing:
                         case "WIDTH" | "HEIGHT":
                             try:
                                 tokens[key] = int(value)
-                            except ValueError:
-                                tokens[key] = 0
+                                if tokens[key] <= 0:
+                                    raise ValueError(f"{key} must be positive")
+                            except ValueError as e:
+                                raise ValueError(f"Invalid {key}: '{value}' is not a valid integer")
 
                         case "OUTPUT_FILE":
                             if len(value.split()) > 1:
@@ -89,7 +91,7 @@ class A_Maze_Ing:
                 for key in tokens:
                     match key:
                         case  "WIDTH" | "HEIGHT":
-                            if tokens[key] <= 0 or tokens[key] <= 0:
+                            if tokens[key] <= 0:
                                 raise ValueError(f"Impossible maze dimensions: ({key} = {tokens[key]})")
                         case  "EXIT" | "ENTRY":
                             if tokens[key]["x"] < 0 or tokens[key]["y"] < 0:
@@ -129,68 +131,30 @@ class A_Maze_Ing:
         def grid_creator(self, height: int, width: int) -> n.ndarray:
             maze = n.full((height, width), 0xF,dtype=n.uint8)
             return maze
-        
-        def recursive_backtracker(self, maze, enx, eny, height, width, exx, exy, path_way):
-            maze[eny, enx] = 0
-            path = (enx, eny) == (exx, exy)
-            directions = ["north", "south", "west", "east"]
-            stack_simulation = []
-            random.shuffle(directions)
-            for move in directions:
-                if move == "north" and eny > 1 and maze[eny-2, enx] == 1:
-                    maze[eny-1, enx] = 0
-                    if self.recursive_backtracker(maze, enx, eny-2, height, width, exx, exy, path_way)[0]:
-                        path = True
-                        maze[eny-1, enx] = 42
-                        path_way.append("N")  # Went north during exploration
-                elif move == "south" and eny < height - 2 and maze[eny+2, enx] == 1:
-                    maze[eny+1, enx] = 0
-                    if self.recursive_backtracker(maze, enx, eny+2, height, width, exx, exy, path_way)[0]:
-                        path = True
-                        maze[eny+1, enx] = 42
-                        path_way.append("S")  # Went south during exploration
-                elif move == "west" and enx > 1 and maze[eny, enx-2] == 1:
-                    maze[eny, enx-1] = 0
-                    if self.recursive_backtracker(maze, enx-2, eny, height, width, exx, exy, path_way)[0]:
-                        path = True
-                        maze[eny, enx-1] = 42
-                        path_way.append("W")  # Went west during exploration
-                elif move == "east" and enx < width - 2 and maze[eny, enx+2] == 1:
-                    maze[eny, enx+1] = 0
-                    if self.recursive_backtracker(maze, enx+2, eny, height, width, exx, exy, path_way)[0]:
-                        path = True
-                        maze[eny, enx+1] = 42
-                        path_way.append("E")  # Went east during exploration
-            if path:
-                maze[eny, enx] = 42
-            return path, path_way
-        
+        def iterative_recursion_backtracker(self, maze):
+            compass = ["North", "South", "West", "East"]
+            random.shuffle(compass)
+            enx, eny = self.entry["x"], self.entry["y"]
+            stack_simulation = [(enx, eny, compass.copy())]
+            visited_cells = set()
+            visited_cells.add((enx, eny))
+            while stack_simulation:
+                x, y, cell_compass = compass[-1]
+                moved = False
+                while cell_compass:
+                    
+                
+
+                
+            
+            
         def maze_entry(self) -> n.ndarray:
-    
-            maze = self.grid_creator(height, width)
             
-            entry_x , entry_y = entry_point
-            exit_x , exit_y = exit_point
+            maze = self.grid_creator(self.height, self.width)
             
-            if entry_x == 0 or entry_y == 0 or entry_x >= width - 1 or entry_y >= height - 1:
-                raise ValueError(f"Invalid Entry ({entry_x}, {entry_y}): entry cannot be on the maze boundary.")
-            if exit_x == 0 or exit_y == 0 or exit_x >= width - 1 or exit_y >= height - 1:
-                raise ValueError(f"Invalid Exit ({exit_x}, {exit_y}): exit cannot be on the maze boundary.")
+            maze = self.iterative_recursion_backtracker(maze)
 
-            valid_point = self.shape_patter_42(maze)
-            if valid_point:
-                pattern = self.pattern_42()
-                x, y = valid_point
-                for pattern_x, pattern_y in pattern:
-                    valid_cell_x = (x + pattern_x) * 2 + 1
-                    valid_cell_y = (y + pattern_y) * 2 + 1
-                    maze[valid_cell_y, valid_cell_x] = 0xf
-            path_way = []
-            self.recursive_backtracker(maze, entry_x, entry_y, height, width, exit_x, exit_y, path_way)
-            maze[entry_y, entry_x] = 0xE
-            maze[exit_y, exit_x] = 0xE2
-
-            return maze, path_way
+            return maze
         
         def imperfect_maze(self, maze, height, width, flawed):
             removeable_walls = []
@@ -203,6 +167,41 @@ class A_Maze_Ing:
             for y, x in removeable_walls[:flawed]:
                 maze[y, x] = 0
             return maze
+        # def recursive_backtracker(self, maze, enx, eny, height, width, exx, exy, path_way):
+        #     maze[eny, enx] = 0
+        #     path = (enx, eny) == (exx, exy)
+        #     directions = ["north", "south", "west", "east"]
+        #     stack_simulation = []
+        #     random.shuffle(directions)
+        #     for move in directions:
+        #         if move == "north" and eny > 1 and maze[eny-2, enx] == 1:
+        #             maze[eny-1, enx] = 0
+        #             if self.recursive_backtracker(maze, enx, eny-2, height, width, exx, exy, path_way)[0]:
+        #                 path = True
+        #                 maze[eny-1, enx] = 42
+        #                 path_way.append("N")  # Went north during exploration
+        #         elif move == "south" and eny < height - 2 and maze[eny+2, enx] == 1:
+        #             maze[eny+1, enx] = 0
+        #             if self.recursive_backtracker(maze, enx, eny+2, height, width, exx, exy, path_way)[0]:
+        #                 path = True
+        #                 maze[eny+1, enx] = 42
+        #                 path_way.append("S")  # Went south during exploration
+        #         elif move == "west" and enx > 1 and maze[eny, enx-2] == 1:
+        #             maze[eny, enx-1] = 0
+        #             if self.recursive_backtracker(maze, enx-2, eny, height, width, exx, exy, path_way)[0]:
+        #                 path = True
+        #                 maze[eny, enx-1] = 42
+        #                 path_way.append("W")  # Went west during exploration
+        #         elif move == "east" and enx < width - 2 and maze[eny, enx+2] == 1:
+        #             maze[eny, enx+1] = 0
+        #             if self.recursive_backtracker(maze, enx+2, eny, height, width, exx, exy, path_way)[0]:
+        #                 path = True
+        #                 maze[eny, enx+1] = 42
+        #                 path_way.append("E")  # Went east during exploration
+        #     if path:
+        #         maze[eny, enx] = 42
+        #     return path, path_way
+        
         
         
 
