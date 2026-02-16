@@ -2,6 +2,7 @@ import numpy as n
 import sys
 import random
 from typing import Any, List, Dict, Union, Optional
+from collections import deque
 
 class A_Maze_Ing:
     def __init__(self):
@@ -182,8 +183,6 @@ class A_Maze_Ing:
                     stack_simulation.pop()
             
             return maze
-                    
-
         def maze_entry(self) -> n.ndarray:
             maze = self.grid_creator(self.maze.height, self.maze.width)
             compass = ["North", "South", "West", "East"]
@@ -201,71 +200,45 @@ class A_Maze_Ing:
             for y, x in removeable_walls[:flawed]:
                 maze[y, x] = 0
             return maze
-      
+    class BFSPathfinder:    
+        def __init__(self, maze: n.ndarray):
+            self.maze = maze
+            self.height, self.width = maze.shape
+            
+            self.DIRECTIONS = {
+                0: (0, -1, 'N'),
+                1: (1, 0, 'E'),
+                2: (0, 1, 'S'),
+                3: (-1, 0, 'W'),
+            }
         
-        
-        
+        def find_path(self, start_x: int, start_y: int, end_x: int, end_y: int) -> str:        
+            queue = deque([(start_x, start_y, "")])
+            visited = {(start_x, start_y)}
+            
+            while queue:
+                x, y, path = queue.popleft()
+                
+                if (x, y) == (end_x, end_y):
+                    return path
+                
+                for direction, (dx, dy, letter) in self.DIRECTIONS.items():
+                    has_wall = bool(self.maze[y, x] & (1 << direction))
+                    
+                    if not has_wall:
+                        nx, ny = x + dx, y + dy
+                        
+                        if (0 <= nx < self.width and 
+                            0 <= ny < self.height and
+                            (nx, ny) not in visited):
+                            
+                            visited.add((nx, ny))
+                            queue.append((nx, ny, path + letter))
+            
+            return ""
+                    
 
-    def maze_printer(self, maze):
-        RESET = "\033[0m"
-        PATH_COLOR = "\033[48;5;254m"
-        WALL_COLOR = "\033[48;5;0m"
-        START_COLOR = "\033[48;5;129m"
-        END_COLOR = "\033[48;5;196m"
-        SYM_COLOR = "\033[48;5;250m"
-        
-        height, width = maze.shape
-        
-        # Draw maze with walls
-        for y in range(height):
-            # Draw horizontal walls (top of cells)
-            for x in range(width):
-                cell_value = maze[y, x]
-                has_north = cell_value & 1
-                
-                if has_north:
-                    print(WALL_COLOR + "██" + RESET, end="")
-                else:
-                    print(PATH_COLOR + "  " + RESET, end="")
-            print()
-            
-            # Draw cell content with vertical walls
-            for x in range(width):
-                cell_value = maze[y, x]
-                has_west = cell_value & 8
-                
-                # West wall
-                if has_west:
-                    print(WALL_COLOR + "█" + RESET, end="")
-                else:
-                    print(PATH_COLOR + " " + RESET, end="")
-                
-                # Cell content
-                if x == self.entry["x"] and y == self.entry["y"]:
-                    print(START_COLOR + "S" + RESET, end="")
-                elif x == self.exit["x"] and y == self.exit["y"]:
-                    print(END_COLOR + "E" + RESET, end="")
-                elif cell_value == 42:
-                    print(SYM_COLOR + "░" + RESET, end="")
-                else:
-                    print(PATH_COLOR + " " + RESET, end="")
-            
-            # Right border
-            if maze[y, width-1] & 2:
-                print(WALL_COLOR + "█" + RESET)
-            else:
-                print(PATH_COLOR + " " + RESET)
-        
-        # Draw bottom border
-        for x in range(width):
-            cell_value = maze[height-1, x]
-            has_south = cell_value & 4
-            
-            if has_south:
-                print(WALL_COLOR + "██" + RESET, end="")
-            else:
-                print(PATH_COLOR + "  " + RESET, end="")
-        print()
+    
     @staticmethod
     def maze_hexadecimal(maze, output_file, height, width, entry_p, exit_p):
         with open(output_file, "w") as f:
@@ -288,12 +261,15 @@ class A_Maze_Ing:
         
         if not self.perfect and self.flawed is not None and self.flawed > 0:
             generated_maze = self.maze.imperfect_maze(generated_maze, self.height, self.width, self.flawed)
-        
-        self.maze_printer(generated_maze)
-        
+                
         if self.output_file:
             self.maze_hexadecimal(generated_maze, self.output_file, self.height, self.width, self.entry, self.exit)
             print(f"\nMaze saved to {self.output_file}")
+        finder = self.BFSPathfinder(generated_maze)
+        path = finder.find_path(0, 0, 19, 14)
+        print(f"Path: {path}")
+        print(f"Length: {len(path)} steps")
+        
 
         
     def print_arguments(self):
