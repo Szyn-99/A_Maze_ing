@@ -131,31 +131,65 @@ class A_Maze_Ing:
         def grid_creator(self, height: int, width: int) -> n.ndarray:
             maze = n.full((height, width), 0xF,dtype=n.uint8)
             return maze
-        def iterative_recursion_backtracker(self, maze):
-            compass = ["North", "South", "West", "East"]
+        
+        @staticmethod
+        def iterative_recursion_backtracker( maze, height, width, enx, eny, compass):
             random.shuffle(compass)
-            enx, eny = self.entry["x"], self.entry["y"]
             stack_simulation = [(enx, eny, compass.copy())]
-            visited_cells = set()
-            visited_cells.add((enx, eny))
+            visited_cells = {(enx, eny)}
             while stack_simulation:
-                x, y, cell_compass = compass[-1]
+                x, y, cell_compass = stack_simulation[-1]
                 moved = False
                 while cell_compass:
-                    
-                
-
-                
+                    move = cell_compass.pop(0)
+                    if move == "North" and y > 0 and (x, y-1) not in visited_cells:
+                        maze[y, x] -= 1      
+                        maze[y-1, x] -= 4    
+                        visited_cells.add((x, y-1))
+                        fresh_compass = compass.copy()
+                        random.shuffle(fresh_compass)
+                        stack_simulation.append((x, y-1, fresh_compass))
+                        moved = True
+                        break
+                    if move == "South" and y < height - 1 and (x, y+1) not in visited_cells:
+                        maze[y, x] -= 4   
+                        maze[y+1, x] -= 1  
+                        visited_cells.add((x, y+1))
+                        fresh_compass = compass.copy()
+                        random.shuffle(fresh_compass)
+                        stack_simulation.append((x, y+1, fresh_compass))
+                        moved = True
+                        break
+                    if move == "West" and x > 0 and (x-1, y) not in visited_cells:
+                        maze[y, x] -= 8    
+                        maze[y, x-1] -= 2    
+                        visited_cells.add((x-1, y))
+                        fresh_compass = compass.copy()
+                        random.shuffle(fresh_compass)
+                        stack_simulation.append((x-1, y, fresh_compass))
+                        moved = True
+                        break
+                    if move == "East" and x < width - 1 and (x+1, y) not in visited_cells:
+                        maze[y, x] -= 2 
+                        maze[y, x+1] -= 8   
+                        visited_cells.add((x+1, y))
+                        fresh_compass = compass.copy()
+                        random.shuffle(fresh_compass)
+                        stack_simulation.append((x+1, y, fresh_compass))
+                        moved = True
+                        break
+                if not moved:
+                    stack_simulation.pop()
             
-            
-        def maze_entry(self) -> n.ndarray:
-            
-            maze = self.grid_creator(self.height, self.width)
-            
-            maze = self.iterative_recursion_backtracker(maze)
-
             return maze
-        
+                    
+
+        def maze_entry(self) -> n.ndarray:
+            maze = self.grid_creator(self.maze.height, self.maze.width)
+            compass = ["North", "South", "West", "East"]
+            maze = self.iterative_recursion_backtracker(maze, self.maze.height, self.maze.width, self.maze.entry["x"], self.maze.entry["y"], compass)
+            return maze
+                    
         def imperfect_maze(self, maze, height, width, flawed):
             removeable_walls = []
             for y in range(1, height - 1):
@@ -167,89 +201,100 @@ class A_Maze_Ing:
             for y, x in removeable_walls[:flawed]:
                 maze[y, x] = 0
             return maze
-        # def recursive_backtracker(self, maze, enx, eny, height, width, exx, exy, path_way):
-        #     maze[eny, enx] = 0
-        #     path = (enx, eny) == (exx, exy)
-        #     directions = ["north", "south", "west", "east"]
-        #     stack_simulation = []
-        #     random.shuffle(directions)
-        #     for move in directions:
-        #         if move == "north" and eny > 1 and maze[eny-2, enx] == 1:
-        #             maze[eny-1, enx] = 0
-        #             if self.recursive_backtracker(maze, enx, eny-2, height, width, exx, exy, path_way)[0]:
-        #                 path = True
-        #                 maze[eny-1, enx] = 42
-        #                 path_way.append("N")  # Went north during exploration
-        #         elif move == "south" and eny < height - 2 and maze[eny+2, enx] == 1:
-        #             maze[eny+1, enx] = 0
-        #             if self.recursive_backtracker(maze, enx, eny+2, height, width, exx, exy, path_way)[0]:
-        #                 path = True
-        #                 maze[eny+1, enx] = 42
-        #                 path_way.append("S")  # Went south during exploration
-        #         elif move == "west" and enx > 1 and maze[eny, enx-2] == 1:
-        #             maze[eny, enx-1] = 0
-        #             if self.recursive_backtracker(maze, enx-2, eny, height, width, exx, exy, path_way)[0]:
-        #                 path = True
-        #                 maze[eny, enx-1] = 42
-        #                 path_way.append("W")  # Went west during exploration
-        #         elif move == "east" and enx < width - 2 and maze[eny, enx+2] == 1:
-        #             maze[eny, enx+1] = 0
-        #             if self.recursive_backtracker(maze, enx+2, eny, height, width, exx, exy, path_way)[0]:
-        #                 path = True
-        #                 maze[eny, enx+1] = 42
-        #                 path_way.append("E")  # Went east during exploration
-        #     if path:
-        #         maze[eny, enx] = 42
-        #     return path, path_way
+      
         
         
         
 
-    @staticmethod
-    def maze_printer(maze):
-        
+    def maze_printer(self, maze):
         RESET = "\033[0m"
-        WALL  = "\033[40m  "           
-        PATH  = "\033[48;5;254m  "    
-        SYM   = "\033[48;5;250m░░"    
-        START = "\033[48;5;129m  "    
-        END   = "\033[48;5;196m  "
+        PATH_COLOR = "\033[48;5;254m"
+        WALL_COLOR = "\033[48;5;0m"
+        START_COLOR = "\033[48;5;129m"
+        END_COLOR = "\033[48;5;196m"
+        SYM_COLOR = "\033[48;5;250m"
         
-        mapping = {
-            0: PATH,
-            1: WALL,
-            0xE: START,
-            0xE2: END,
-            42: SYM
-        }
-        for row in maze:
-            for cell in row:
-                print(mapping.get(cell, PATH), end="")
-            print(RESET)
+        height, width = maze.shape
+        
+        # Draw maze with walls
+        for y in range(height):
+            # Draw horizontal walls (top of cells)
+            for x in range(width):
+                cell_value = maze[y, x]
+                has_north = cell_value & 1
+                
+                if has_north:
+                    print(WALL_COLOR + "██" + RESET, end="")
+                else:
+                    print(PATH_COLOR + "  " + RESET, end="")
+            print()
+            
+            # Draw cell content with vertical walls
+            for x in range(width):
+                cell_value = maze[y, x]
+                has_west = cell_value & 8
+                
+                # West wall
+                if has_west:
+                    print(WALL_COLOR + "█" + RESET, end="")
+                else:
+                    print(PATH_COLOR + " " + RESET, end="")
+                
+                # Cell content
+                if x == self.entry["x"] and y == self.entry["y"]:
+                    print(START_COLOR + "S" + RESET, end="")
+                elif x == self.exit["x"] and y == self.exit["y"]:
+                    print(END_COLOR + "E" + RESET, end="")
+                elif cell_value == 42:
+                    print(SYM_COLOR + "░" + RESET, end="")
+                else:
+                    print(PATH_COLOR + " " + RESET, end="")
+            
+            # Right border
+            if maze[y, width-1] & 2:
+                print(WALL_COLOR + "█" + RESET)
+            else:
+                print(PATH_COLOR + " " + RESET)
+        
+        # Draw bottom border
+        for x in range(width):
+            cell_value = maze[height-1, x]
+            has_south = cell_value & 4
+            
+            if has_south:
+                print(WALL_COLOR + "██" + RESET, end="")
+            else:
+                print(PATH_COLOR + "  " + RESET, end="")
+        print()
     @staticmethod
-    def maze_hexadecimal(maze, output_file, height, width, entry_p, exit_p, path_way):
-        path_from_entry_to_exit = list(reversed(path_way))
-        
-        with open(output_file, "w+") as f:
-            for y in range(1, height-1 , 2):  
+    def maze_hexadecimal(maze, output_file, height, width, entry_p, exit_p):
+        with open(output_file, "w") as f:
+            for y in range(height):  
                 row_cells = []
-                for x in range(1, width-1, 2):  
-                    cell_hex = 0
-                    if maze[y-1][x] == 1: cell_hex += 1 #North
-                    if maze[y+1][x] == 1: cell_hex += 4 #South
-                    if maze[y][x+1] == 1: cell_hex += 2 #East
-                    if maze[y][x-1] == 1: cell_hex += 8 #West
+                for x in range(width):  
+                    cell_hex = maze[y, x]
                     row_cells.append(hex(cell_hex)[2:].upper())
                 print("".join(row_cells), file=f)
-            enx, eny, = entry_p["x"], entry_p["y"]
-            exx, exy, = exit_p["x"], exit_p["y"]
+            enx, eny = entry_p["x"], entry_p["y"]
+            exx, exy = exit_p["x"], exit_p["y"]
             print(f"\n{enx},{eny}", file=f, end="\n")
             print(f"{exx},{exy}", file=f, end="\n")
-            for direction in path_from_entry_to_exit:
-                print(direction, file=f, end="")
-            print(file=f, end="\n")
             
-    
+    def combine(self):
+        if self.seed is not None:
+            random.seed(self.seed)
+        
+        generated_maze = self.maze.maze_entry()
+        
+        if not self.perfect and self.flawed is not None and self.flawed > 0:
+            generated_maze = self.maze.imperfect_maze(generated_maze, self.height, self.width, self.flawed)
+        
+        self.maze_printer(generated_maze)
+        
+        if self.output_file:
+            self.maze_hexadecimal(generated_maze, self.output_file, self.height, self.width, self.entry, self.exit)
+            print(f"\nMaze saved to {self.output_file}")
+
         
     def print_arguments(self):
         print(f"Height: {self.height}")
@@ -264,5 +309,4 @@ class A_Maze_Ing:
             
 if __name__ == "__main__":
     maze = A_Maze_Ing()
-    # maze.print_arguments()
-    maze.print_arguments()
+    maze.combine()
