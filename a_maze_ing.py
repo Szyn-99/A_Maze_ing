@@ -112,12 +112,48 @@ class A_Maze_Ing:
     class MazeGenerationParts:
         def __init__(self, maze):
             self.maze = maze
-
         @staticmethod
-        def iterative_backtracker(maze, height, width, enx, eny, compass):
+        def pattern_42(height, width):
+            base_pattern = {
+                            (0,0) ,(0, 1), (0, 2), (1, 2), (2, 2), (2, 3), (2, 4), 
+                            (4, 0), (5, 0), (6, 0), (6, 1),  (4, 2), (5, 2), (6, 2), (4, 3)
+                            }
+            pattern_height = max(x for x, _ in base_pattern) + 1
+            pattern_width = max(y for _, y in base_pattern) + 1
+            if height <= pattern_height or width <= pattern_width:
+                print(f"cannot place pattern on the maze {width}/{height}")
+                sys.exit(1)
+            scale_x = width // pattern_width
+            scale_y = height // pattern_height
+            scale = 1 if scale_x == 0 or scale_y == 0 else min(scale_x, scale_y)
+            pattern_height = pattern_height * scale
+            pattern_width = pattern_width * scale
+            middle_x = (width - pattern_width) // 2
+            middle_y = (height - pattern_height) // 2
+            scaled_pattern = set()
+            for bx, by in base_pattern:
+                for sx in range(scale):
+                    for sy in range(scale):
+                        x = bx * scale + sx + middle_x
+                        y = by * scale + sy + middle_y
+                        scaled_pattern.add((x, y))
+            return scaled_pattern
+        
+        @staticmethod
+        def iterative_backtracker(maze, height, width, enx, eny, compass, exx, exy):
+            pattern_coords = A_Maze_Ing.MazeGenerationParts.pattern_42(height, width)
+            print(pattern_coords)
+            
             random.shuffle(compass)
             stack_simulation = [(enx, eny, compass.copy())]
+            entry = (enx, eny)
+            exit_ = (exx, exy)
             visited_cells = {(enx, eny)}
+            for cord in pattern_coords:
+                if cord == entry or cord == exit_:
+                    print(f"Entry/Exit spotted on pattern")
+                    sys.exit(1)
+                visited_cells.add(cord)
             while stack_simulation:
                 x, y, cell_compass = stack_simulation[-1]
                 moved = False
@@ -218,7 +254,7 @@ class A_Maze_Ing:
             random.seed(self.seed)
         compass = ["North", "East", "South", "West"]
         maze = n.full((self.height, self.width), 0xF,dtype=n.uint8)
-        generated_maze = self.MazeGenerationParts.iterative_backtracker(maze, self.height, self.width, self.entry['x'], self.entry['y'], compass)
+        generated_maze = self.MazeGenerationParts.iterative_backtracker(maze, self.height, self.width, self.entry['x'], self.entry['y'], compass, self.exit['x'], self.exit['y'])
         path = self.MazeGenerationParts.bfs(generated_maze, self.entry['x'], self.entry['y'], self.exit['x'], self.exit['y'])
         print(f"{path}")
         self.maze_hexadecimal(generated_maze, self.output_file, self.height, self.width, self.entry, self.exit, path)
