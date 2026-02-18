@@ -1,45 +1,38 @@
-# from collections import deque
-
-# class BFSPathfinder:    
-#     def __init__(self, maze: np.ndarray):
-#         self.maze = maze
-#         self.height, self.width = maze.shape
-        
-#         self.DIRECTIONS = {
-#             0: (0, -1, 'N'),
-#             1: (1, 0, 'E'),
-#             2: (0, 1, 'S'),
-#             3: (-1, 0, 'W'),
-#         }
+import random
+class MazeGenerationParts:
+    # ... existing code ...
     
-#     def find_path(self, start_x: int, start_y: int,
-#                   end_x: int, end_y: int) -> str:        
-#         queue = deque([(start_x, start_y, "")])
-#         visited = {(start_x, start_y)}
+    @staticmethod
+    def make_imperfect(maze, height, width):
+        """
+        Make maze imperfect by removing 25% of cell count worth of walls.
+        """
+        # Calculate walls to remove (25% of cells)
+        total_cells = height * width
+        num_walls_to_remove = int(total_cells * 0.25)
         
-#         while queue:
-#             x, y, path = queue.popleft()
+        directions = [(0, -1, 0, 2), (1, 0, 1, 3), (0, 1, 2, 0), (-1, 0, 3, 1)]
+        
+        removed = 0
+        attempts = 0
+        max_attempts = num_walls_to_remove * 100
+        
+        while removed < num_walls_to_remove and attempts < max_attempts:
+            attempts += 1
             
-#             if (x, y) == (end_x, end_y):
-#                 return path
-
-#             for direction, (dx, dy, letter) in self.DIRECTIONS.items():
-#                 has_wall = bool(self.maze[y, x] & (1 << direction))
-                
-#                 if not has_wall:
-#                     nx, ny = x + dx, y + dy
-                    
-#                     if (0 <= nx < self.width and 
-#                         0 <= ny < self.height and
-#                         (nx, ny) not in visited):
-
-#                         visited.add((nx, ny))
-#                         queue.append((nx, ny, path + letter))
+            x = random.randint(0, width - 1)
+            y = random.randint(0, height - 1)
+            dx, dy, my_wall, neighbor_wall = random.choice(DIRECTIONS)
+            nx, ny = x + dx, y + dy
+            
+            if not (0 <= nx < width and 0 <= ny < height):
+                continue
+            
+            has_wall = bool(maze[y, x] & (1 << my_wall))
+            
+            if has_wall:
+                maze[y, x] &= ~(1 << my_wall)
+                maze[ny, nx] &= ~(1 << neighbor_wall)
+                removed += 1
         
-        # return ""/
-
-print(bool(-9))
-# finder = BFSPathfinder(maze)
-# path = finder.find_path(0, 0, 19, 14)
-# print(f"Path: {path}")
-# print(f"Length: {len(path)} steps")
+        return maze

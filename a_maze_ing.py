@@ -13,7 +13,6 @@ class A_Maze_Ing:
         self.output_file = self.tokens["OUTPUT_FILE"]
         self.seed = self.tokens["SEED"]
         self.perfect = self.tokens["PERFECT"]
-        self.flawed = self.tokens["FLAWED"]
         self.maze = self.MazeGenerationParts(self)
 
     class Maze_config_analyzer:
@@ -76,17 +75,11 @@ class A_Maze_Ing:
                             except ValueError:
                                 raise ValueError(f"Invalid/Missing {key} value")
 
-                        case "FLAWED" | "SEED":
-                            try:
-                                tokens[key] = int(value)
-                            except ValueError:
-                                tokens[key] = None
-
                 for key, value_count in counts.items():
                     if value_count > 1:
                         raise ValueError(f"Duplicate token detected: {key}")
                     elif value_count <= 0:
-                        if key == "FLAWED" or key == "SEED":
+                        if key == "SEED":
                             raise ValueError(f"Missing optional keys: {key}, use 'None' to discard")
                         else:
                             raise ValueError(f"Missing required keys: {key}")
@@ -116,16 +109,17 @@ class A_Maze_Ing:
         def pattern_42(height, width):
             base_pattern = {
                             (0,0) ,(0, 1), (0, 2), (1, 2), (2, 2), (2, 3), (2, 4), 
-                            (4, 0), (5, 0), (6, 0), (6, 1),  (4, 2), (5, 2), (6, 2), (4, 3)
+                            (4, 0), (5, 0), (6, 0), (6, 1),  (4, 2), (5, 2), (6, 2), (4, 3),
+                            (4,4), (5,4), (6,4)
                             }
-            pattern_height = max(x for x, _ in base_pattern) + 1
-            pattern_width = max(y for _, y in base_pattern) + 1
+            pattern_width = max(x for x, _ in base_pattern) + 1
+            pattern_height = max(y for _, y in base_pattern) + 1
             if height <= pattern_height or width <= pattern_width:
                 print(f"cannot place pattern on the maze {width}/{height}")
                 sys.exit(1)
             scale_x = width // pattern_width
             scale_y = height // pattern_height
-            scale = 1 if scale_x == 0 or scale_y == 0 else min(scale_x, scale_y)
+            scale = 1 if scale_x == 0 or scale_y == 0 else min(scale_x, scale_y) // 25
             pattern_height = pattern_height * scale
             pattern_width = pattern_width * scale
             middle_x = (width - pattern_width) // 2
@@ -154,6 +148,8 @@ class A_Maze_Ing:
                     print(f"Entry/Exit spotted on pattern")
                     sys.exit(1)
                 visited_cells.add(cord)
+                x, y = cord
+                maze[y,x] = 0xF
             while stack_simulation:
                 x, y, cell_compass = stack_simulation[-1]
                 moved = False
@@ -197,8 +193,8 @@ class A_Maze_Ing:
                         break
                 if not moved:
                     stack_simulation.pop()
-
             return maze
+
         @staticmethod
         def bfs(maze, enx: int, eny: int, exx: int, exy: int) -> str:
             directions = {0: (0, -1, 'N'), 1: (1, 0, 'E'), 2: (0, 1, 'S'), 3: (-1, 0, 'W')} 
@@ -210,7 +206,7 @@ class A_Maze_Ing:
                 
                 if (x, y) == (exx, exy):
                     return path
-                
+
                 for direction, (dx, dy, compass) in directions.items():
 
                     if not bool(maze[y, x] & (0x1 << direction)):
@@ -224,6 +220,32 @@ class A_Maze_Ing:
                             queue.append((nx, ny, path + compass))
 
             return "No path found"
+        def imperfect_maze(self, maze, height, width):
+            pattern_coords = self.MazeGenerationParts.pattern_42(height, width)
+            directions = [(0, -1, 0, 2), (1, 0, 1, 3), (0, 1, 2, 0), (-1, 0, 3, 1)]
+            removed_walls = set()
+
+            total_walls = int((width * height) * 0.25)
+            max_tries = width * height
+            walls = 0
+            tries = 0
+            while tries < max_tries and walls < total_walls:
+                tries += 1
+                x , y = random.randint(0, width - 1), random.randint(0, height - 1)
+                if (x, y) in pattern_coords:
+                    continue
+                dx, dy , wall, neighbor_wall = random.choice(directions)
+                nx = dx + x
+                ny = dy + y
+                if not (0 <= nx < width and 0 <= ny < height):
+                    continue
+                if bool(maze[y, x] & (1 << wall)):
+                    maze[y,x] &= ~(1 << wall)
+                    maze[ny,nx] &= ~(1 << neighbor_wall)
+                    walls += 1
+                    removed_walls.add((x, y))
+            print(len(removed_walls))
+            return maze
         
     @staticmethod
     def maze_hexadecimal(maze, output_file, height, width, entry_p, exit_p, path):
@@ -249,13 +271,14 @@ class A_Maze_Ing:
         print(f"Output File: {self.output_file}")
         print(f"Seed: {self.seed}")
         print(f"Perfect: {self.perfect}")
-        print(f"Flawed: {self.flawed}")
         if self.seed:
             random.seed(self.seed)
         compass = ["North", "East", "South", "West"]
         maze = n.full((self.height, self.width), 0xF,dtype=n.uint8)
         generated_maze = self.MazeGenerationParts.iterative_backtracker(maze, self.height, self.width, self.entry['x'], self.entry['y'], compass, self.exit['x'], self.exit['y'])
         path = self.MazeGenerationParts.bfs(generated_maze, self.entry['x'], self.entry['y'], self.exit['x'], self.exit['y'])
+        if not self.perfect:
+            generated_maze = self.MazeGenerationParts.imperfect_maze(self, generated_maze, self.height, self.width)
         print(f"{path}")
         self.maze_hexadecimal(generated_maze, self.output_file, self.height, self.width, self.entry, self.exit, path)
         
