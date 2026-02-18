@@ -33,7 +33,6 @@ class A_Maze_Ing:
                     "ENTRY": {"x": 0, "y": 0},
                     "OUTPUT_FILE": None,
                     "PERFECT": 0,
-                    "FLAWED": None,
                     "SEED": None,
                 }
 
@@ -231,12 +230,12 @@ class A_Maze_Ing:
             while tries < max_tries and walls < total_walls:
                 tries += 1
                 x , y = random.randint(0, width - 1), random.randint(0, height - 1)
-                if (x, y) in pattern_coords:
-                    continue
                 dx, dy , wall, neighbor_wall = random.choice(directions)
                 nx = dx + x
                 ny = dy + y
                 if not (0 <= nx < width and 0 <= ny < height):
+                    continue
+                if (nx, ny) in pattern_coords or (x, y) in pattern_coords:
                     continue
                 if bool(maze[y, x] & (1 << wall)):
                     maze[y,x] &= ~(1 << wall)
@@ -244,6 +243,7 @@ class A_Maze_Ing:
                     walls += 1
                     removed_walls.add((x, y))
             print(len(removed_walls))
+            print(f"Walls removed -> {walls}")
             return maze
     @staticmethod
     def maze_printer(maze, entry, exit, current=None):

@@ -15,10 +15,9 @@ SEED=None
 ENTRY=0, 9
 
 
-FLAWED=None
 
 
 OUTPUT_FILE=output.txt
 
 
-PERFECT=True
+PERFECT=False
