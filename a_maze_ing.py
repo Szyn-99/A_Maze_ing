@@ -119,7 +119,7 @@ class A_Maze_Ing:
                 sys.exit(1)
             scale_x = width // pattern_width
             scale_y = height // pattern_height
-            scale = 1 if scale_x == 0 or scale_y == 0 else min(scale_x, scale_y) // 25
+            scale = max(1, min(scale_x, scale_y) // 25)
             pattern_height = pattern_height * scale
             pattern_width = pattern_width * scale
             middle_x = (width - pattern_width) // 2
@@ -204,11 +204,10 @@ class A_Maze_Ing:
             while queue:
                 x, y, path = queue.pop(0)
                 
-                if (x, y) == (exx, exy):
-                    return path
 
                 for direction, (dx, dy, compass) in directions.items():
-
+                    if (x, y) == (exx, exy):
+                        return path + compass
                     if not bool(maze[y, x] & (0x1 << direction)):
                         nx, ny = x + dx, y + dy
                         
@@ -246,7 +245,67 @@ class A_Maze_Ing:
                     removed_walls.add((x, y))
             print(len(removed_walls))
             return maze
-        
+    @staticmethod
+    def maze_printer(maze, entry, exit, current=None):
+        height, width = maze.shape
+
+        # ANSI background colors
+        WHITE = "\x1b[100m"
+        BLACK = "\033[47m"
+        GREEN = "\033[42m"
+        RED   = "\033[41m"
+        RESET = "\033[0m"
+        BLUE  = "\033[44m"
+
+        # Create full visual grid (2*height+1 x 2*width+1)
+        visual = [[1 for _ in range(width * 2 + 1)] for _ in range(height * 2 + 1)]
+
+        for y in range(height):
+            for x in range(width):
+                vy = y * 2 + 1
+                vx = x * 2 + 1
+
+                visual[vy][vx] = 0  # cell space
+
+                # Remove walls based on bitmask
+                if not (maze[y, x] & 1):  # north
+                    visual[vy - 1][vx] = 0
+                if not (maze[y, x] & 4):  # south
+                    visual[vy + 1][vx] = 0
+                if not (maze[y, x] & 8):  # west
+                    visual[vy][vx - 1] = 0
+                if not (maze[y, x] & 2):  # east
+                    visual[vy][vx + 1] = 0
+
+        # Set entry & exit
+        ey, ex = entry[1] * 2 + 1, entry[0] * 2 + 1
+        zy, zx = exit[1] * 2 + 1, exit[0] * 2 + 1
+
+        visual[ey][ex] = 2  # green
+        visual[zy][zx] = 3  # red
+
+        if current is not None:
+            cy, cx = current[1] * 2 + 1, current[0] * 2 + 1
+            visual[cy][cx] = 4
+
+        # Print
+        for row in visual:
+            line = ""
+            for cell in row:
+                if cell == 1:
+                    line += WHITE + "  "
+                elif cell == 0:
+                    line += BLACK + "  "
+                elif cell == 2:
+                    line += GREEN + "  "
+                elif cell == 3:
+                    line += RED + "  "
+                elif cell == 4:
+                    line += BLUE + "  "
+            line += RESET
+            print(line)
+
+
     @staticmethod
     def maze_hexadecimal(maze, output_file, height, width, entry_p, exit_p, path):
         with open(output_file, "w") as f:
@@ -277,10 +336,11 @@ class A_Maze_Ing:
         maze = n.full((self.height, self.width), 0xF,dtype=n.uint8)
         generated_maze = self.MazeGenerationParts.iterative_backtracker(maze, self.height, self.width, self.entry['x'], self.entry['y'], compass, self.exit['x'], self.exit['y'])
         path = self.MazeGenerationParts.bfs(generated_maze, self.entry['x'], self.entry['y'], self.exit['x'], self.exit['y'])
-        if not self.perfect:
+        if self.perfect == False:
             generated_maze = self.MazeGenerationParts.imperfect_maze(self, generated_maze, self.height, self.width)
         print(f"{path}")
         self.maze_hexadecimal(generated_maze, self.output_file, self.height, self.width, self.entry, self.exit, path)
+        self.maze_printer(generated_maze, (self.entry['x'], self.entry['y']), (self.exit['x'], self.exit['y']))
         
             
 if __name__ == "__main__":
