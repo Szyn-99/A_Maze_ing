@@ -5,11 +5,12 @@ HEIGHT=15
 EXIT=0,0
 
 
-# seed must be <= 4294967295 and >= 0
+# seed must be <= 4294967295 and >= 0, nevermind just for numpy
 
 
 
-SEED=None
+
+SEED=251
 
 
 ENTRY=0, 9
@@ -17,7 +18,7 @@ ENTRY=0, 9
 
 
 
-OUTPUT_FILE=output.txt
+OUTPUT_FILE=alo
 
 
-PERFECT=False
+PERFECT=true
