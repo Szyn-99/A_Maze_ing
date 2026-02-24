@@ -1,8 +1,15 @@
-import random
-from sys import exit
+
 class MazeGenerationParts:
-        def __init__(self, maze):
-            self.maze = maze
+        def __init__(self, height, width, entry, exit_, perfect, output_file, seed):
+            self.width = width
+            self.height = height
+            self.entry = entry
+            self.exit = exit_
+            self.output_file = output_file
+            self.seed = seed
+            self.perfect = perfect
+            self.generated_maze = None
+            self.path = None
         @staticmethod
         def pattern_42(height, width):
             base_pattern = {
@@ -142,3 +149,29 @@ class MazeGenerationParts:
                     walls += 1
                     removed_walls.add((x, y))
             return maze
+        def bring_maze(self):
+            compass = ["North", "East", "South", "West"]
+            maze = n.full((self.height, self.width), 0xF,dtype=n.uint8)
+            self.generated_maze = self.iterative_backtracker(maze, self.height, self.width, self.entry, compass, self.exit, self.seed)
+            if self.perfect == False:
+                self.generated_maze = self.imperfect_maze(self.generated_maze, self.height, self.width, self.entry, self.exit, self.seed)
+            return self.generated_maze
+        
+if __name__ == "__main__":
+    import random
+    from sys import exit
+    from config_validator import Maze_config_analyzer as ConfigAnalyzer
+    import numpy as n
+    parsed_config = ConfigAnalyzer.parse_and_validate()
+    entry = tuple(parsed_config["ENTRY"].values())
+    exit_ = tuple(parsed_config["EXIT"].values())
+    width = parsed_config["WIDTH"]
+    height = parsed_config["HEIGHT"]
+    output_file = parsed_config["OUTPUT_FILE"]
+    perfect = parsed_config["PERFECT"]
+    seed = parsed_config["SEED"]
+    if seed:
+        random.seed(seed)
+    maze = MazeGenerationParts(height, width, entry, exit_, perfect, output_file, seed)
+    generated_maze = maze.bring_maze()
+    print(generated_maze)
