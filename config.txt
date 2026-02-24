@@ -10,7 +10,7 @@ EXIT=0,0
 
 
 
-SEED=251
+SEED=None
 
 
 ENTRY=0, 9

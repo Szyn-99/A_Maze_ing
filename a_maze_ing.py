@@ -12,7 +12,8 @@ class A_Maze_Ing:
         self.output_file = output_file
         self.seed = seed
         self.perfect = perfect
-        self.generated_maze = self.bring_maze()
+        self.generated_maze = None
+        self.path = None
 
     def get_entry(self):
         return self.entry
@@ -23,18 +24,18 @@ class A_Maze_Ing:
     def bring_maze(self):
         compass = ["North", "East", "South", "West"]
         maze = n.full((self.height, self.width), 0xF,dtype=n.uint8)
-        generated_maze = MazeGenParts.iterative_backtracker(maze, self.height, self.width, self.entry, compass, self.exit, self.seed)
+        self.generated_maze = MazeGenParts.iterative_backtracker(maze, self.height, self.width, self.entry, compass, self.exit, self.seed)
         if self.perfect == False:
-            generated_maze = MazeGenParts.imperfect_maze(generated_maze, self.height, self.width, self.entry, self.exit, self.seed)
-        return generated_maze
+            self.generated_maze = MazeGenParts.imperfect_maze(generated_maze, self.height, self.width, self.entry, self.exit, self.seed)
+        return self.generated_maze
 
     def get_grid(self):
         grid = n.full((self.height, self.width), 0xF,dtype=n.uint8)
         return grid
 
-    def get_path(self):
-        path = MazeGenParts.bfs(self.generated_maze, self.entry, self.exit)
-        return path
+    def get_path(self, generated_maze):
+        self.path = MazeGenParts.bfs(generated_maze, self.entry, self.exit)
+        return self.path
 
     def maze_hexadecimal(self):
         with open(self.output_file, "w") as f:
@@ -48,7 +49,7 @@ class A_Maze_Ing:
             exx, exy = self.exit
             print(f"\n{enx},{eny}", file=f, end="\n")
             print(f"{exx},{exy}", file=f, end="\n")
-            print(f"{path}", file=f, end="\n")
+            print(f"{self.path}", file=f, end="\n")
 
 if __name__ == "__main__":
     parsed_config = ConfigAnalyzer.parse_and_validate()
@@ -62,11 +63,17 @@ if __name__ == "__main__":
     if seed:
         random.seed(seed)
     maze = A_Maze_Ing(height, width, entry, exit_, perfect, output_file, seed)
-    generated_maze = maze.get_maze()
+    generated_maze = maze.bring_maze()
+    print(generated_maze)
     grid = maze.get_grid()
-    path = maze.get_path()
+    print(grid)
+    path = maze.get_path(generated_maze)
+    print(path)
     entry_p = maze.get_entry()
+    print(entry_p)
     exit_p = maze.get_exit()
+    print(exit_p)
     maze.maze_hexadecimal()
+    
     
     
