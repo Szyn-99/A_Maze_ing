@@ -175,3 +175,8 @@ if __name__ == "__main__":
     maze = MazeGenerationParts(height, width, entry, exit_, perfect, output_file, seed)
     generated_maze = maze.bring_maze()
     print(generated_maze)
+    print(f"entry: {entry}, exit: {exit_}")
+    print(f"perfect: {perfect}, seed: {seed}")
+    print(f"width: {width}, height: {height}")
+    print(f"path: {maze.bfs(generated_maze, entry, exit_)}")
+    print(f"output file: {output_file}")
