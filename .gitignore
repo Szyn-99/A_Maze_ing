@@ -1,3 +1,6 @@
 __pycache__
 lab
 alo
+.venv
+poetry.lock
+.mypy_cache
