@@ -214,17 +214,17 @@ class MazeGenerationParts:
                             queue.append((nx, ny, path + compass))
 
             return "No path found"
-        def imperfection_helper(self, maze: n.ndarray, pattern_coords: set[tuple[int, int]]) -> False:
+        def imperfection_helper(self, maze: n.ndarray) -> bool:
             for y in range(self.height - 2):
                 for x in range(self.width - 2):
-                    open = True
+                    open_check = True
                     for y1 in range (y, y + 3):
                         for x1 in range (x, x + 3):
-                            if maze[y1, x1] & (1 << 1) and maze[y1, x1] & (1 << 2):
-                                open = False
+                            if maze[y1, x1] & (1 << 1) or maze[y1, x1] & (1 << 2):
+                                open_check = False
                                 break
-                    if open:
-                        return open
+                    if open_check:
+                        return open_check
             return False
 
         def imperfect_maze(self, maze: n.ndarray) -> n.ndarray:
@@ -251,6 +251,12 @@ class MazeGenerationParts:
                     maze[ny,nx] &= ~(1 << neighbor_wall)
                     walls += 1
                     removed_walls.add((x, y))
+                    if self.imperfection_helper(maze):
+                        maze[y,x] |= (1 << wall)
+                        maze[ny,nx] |= (1 << neighbor_wall)
+                        walls -= 1
+                        removed_walls.remove((x, y))
+
             return maze
         def get_maze(self) -> n.ndarray:
             compass = ["North", "East", "South", "West"]
