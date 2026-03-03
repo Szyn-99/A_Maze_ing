@@ -1,18 +1,18 @@
 from sys import argv, exit
-from typing import Union
+from typing import Union, Dict, Any
 
 class Maze_config_analyzer:
         @staticmethod
-        def parse_and_validate() -> dict[str, Union[str, int, None]]:
+        def parse_and_validate() -> Dict[str, Any]:
             try:
                 if len(argv) > 2:
                     raise ValueError("Too many arguments provided. Only the configuration file path is required.")
                 elif len(argv) < 2:
                     raise ValueError("No configuration file provided. Please provide the path to the configuration file.")
-                config_file = argv[1]
+                config_file: str = argv[1]
                 with open(config_file, "r") as f:
-                    config_lines = [line.strip() for line in f]
-                tokens = {
+                    config_lines: list[str] = [line.strip() for line in f]
+                tokens: Dict[str, Any] = {
                     "WIDTH": 0,
                     "HEIGHT": 0,
                     "EXIT": {"x": 0, "y": 0},
@@ -22,7 +22,7 @@ class Maze_config_analyzer:
                     "SEED": None,
                 }
 
-                counts = {key: 0 for key in tokens}
+                counts: Dict[str, int] = {key: 0 for key in tokens}
 
                 for line in config_lines:
                     if line is None or line == "" or line[0] == "#" or "=" not in line:

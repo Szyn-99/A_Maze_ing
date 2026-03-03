@@ -3,6 +3,9 @@ import random
 from typing import Any, List, Dict, Union, Optional
 from config_validator import Maze_config_analyzer as ConfigAnalyzer
 from backtracker import MazeGenerationParts as MazeGenParts
+from maze_renderer import Render_Maze
+
+
 class A_Maze_Ing:
     def __init__(self, height, width, entry, exit_, perfect, output_file, seed):
         self.width = width
@@ -24,9 +27,9 @@ class A_Maze_Ing:
     def bring_maze(self):
         compass = ["North", "East", "South", "West"]
         maze = n.full((self.height, self.width), 0xF,dtype=n.uint8)
-        self.generated_maze = MazeGenParts.iterative_backtracker(maze, self.height, self.width, self.entry, compass, self.exit, self.seed)
+        self.generated_maze = MazeGenParts.iterative_backtracker(maze, self.height, self.width, self.entry, compass, self.exit, self.seed, True)
         if self.perfect == False:
-            self.generated_maze = MazeGenParts.imperfect_maze(generated_maze, self.height, self.width, self.entry, self.exit, self.seed)
+            self.generated_maze = MazeGenParts.imperfect_maze(generated_maze, self.height, self.width, self.entry, self.exit, self.seed, True)
         return self.generated_maze
 
     def get_grid(self):
@@ -51,7 +54,8 @@ class A_Maze_Ing:
             print(f"{exx},{exy}", file=f, end="\n")
             print(f"{self.path}", file=f, end="\n")
 
-if __name__ == "__main__":
+
+def main():
     parsed_config = ConfigAnalyzer.parse_and_validate()
     entry = tuple(parsed_config["ENTRY"].values())
     exit_ = tuple(parsed_config["EXIT"].values())
@@ -60,20 +64,28 @@ if __name__ == "__main__":
     output_file = parsed_config["OUTPUT_FILE"]
     perfect = parsed_config["PERFECT"]
     seed = parsed_config["SEED"]
+
     if seed:
         random.seed(seed)
-    maze = A_Maze_Ing(height, width, entry, exit_, perfect, output_file, seed)
-    generated_maze = maze.bring_maze()
-    print(generated_maze)
-    grid = maze.get_grid()
-    print(grid)
-    path = maze.get_path(generated_maze)
-    print(path)
-    entry_p = maze.get_entry()
-    print(entry_p)
-    exit_p = maze.get_exit()
-    print(exit_p)
-    maze.maze_hexadecimal()
-    
-    
-    
+
+    compass = ["North", "East", "South", "West"]
+    grid = n.full((height, width), 0xF, dtype=n.uint8)
+
+    generated_maze, actions = MazeGenParts.iterative_backtracker(
+        grid, height, width, entry, compass, exit_, seed, record=True
+    )
+
+    if not perfect:
+        generated_maze = MazeGenParts.imperfect_maze(generated_maze, height, width)
+
+    path = MazeGenParts.bfs(generated_maze, entry, exit_)
+
+    renderer = Render_Maze(generated_maze, entry, exit_)
+    renderer.animate(actions)
+    renderer.display()
+
+
+
+if __name__ == "__main__":
+   main()
+
