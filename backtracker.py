@@ -50,133 +50,74 @@ class Amazing:
         
         def iterative_backtracker(
             self,
-            maze: n.ndarray,
+            maze: np.ndarray,
             compass: List[str],
             record: bool = False
-        ) -> Union[n.ndarray, Tuple[n.ndarray, List[Dict[str, Any]]]]:
+        ) -> Union[np.ndarray, Tuple[np.ndarray, List[Dict[str, Any]]]]:
+            
+            direction_map = {
+                "North": (0, -1, 1, 4),
+                "South": (0,  1, 4, 1),
+                "West":  (-1, 0, 8, 2),
+                "East":  (1,  0, 2, 8),
+            }
+
             actions = [] if record else None
             pattern_coords = self.pattern_42()
             enx, eny = self.entry
             random.shuffle(compass)
             stack_simulation = [(enx, eny, compass.copy())]
             visited_cells = {(enx, eny)}
+
             if record:
-                actions.append({
-                    'type': 'visit',
-                    'cell': (enx, eny),
-                    'stack_size': 1
-                })
+                actions.append({'type': 'visit', 'cell': (enx, eny), 'stack_size': 1})
+
             for cord in pattern_coords:
                 if cord == self.entry or cord == self.exit:
                     print(f"Entry/Exit spotted on pattern")
                     exit(1)
                 visited_cells.add(cord)
                 x, y = cord
-                maze[y,x] = 0xF
+                maze[y, x] = 0xF
                 if record:
-                    actions.append({
-                        'type': 'pattern',
-                        'cell': (x, y)
-                    })
+                    actions.append({'type': 'pattern', 'cell': (x, y)})
+
             while stack_simulation:
                 x, y, cell_compass = stack_simulation[-1]
                 moved = False
+
                 while cell_compass:
                     move = cell_compass.pop(0)
-                    if move == "North" and y > 0 and (x, y-1) not in visited_cells:
-                        maze[y, x] -= 1      
-                        maze[y-1, x] -= 4    
-                        visited_cells.add((x, y-1))
+                    dx, dy, wall, neighbor_wall = direction_map[move]
+                    nx, ny = x + dx, y + dy
+
+                    if (0 <= nx < self.width and 0 <= ny < self.height
+                            and (nx, ny) not in visited_cells):
+
+                        maze[y, x] -= wall
+                        maze[ny, nx] -= neighbor_wall
+                        visited_cells.add((nx, ny))
 
                         if record:
                             actions.append({
                                 'type': 'carve',
                                 'from_cell': (x, y),
-                                'to_cell': (x, y-1),
-                                'direction': 'N',
+                                'to_cell': (nx, ny),
+                                'direction': move[0],  # first letter e.g 'N', 'S', 'W', 'E'
                                 'stack_size': len(stack_simulation)
                             })
                             actions.append({
                                 'type': 'visit',
-                                'cell': (x, y-1),
+                                'cell': (nx, ny),
                                 'stack_size': len(stack_simulation) + 1
                             })
 
                         fresh_compass = compass.copy()
                         random.shuffle(fresh_compass)
-                        stack_simulation.append((x, y-1, fresh_compass))
+                        stack_simulation.append((nx, ny, fresh_compass))
                         moved = True
                         break
-                    if move == "South" and y < self.height - 1 and (x, y+1) not in visited_cells:
-                        maze[y, x] -= 4   
-                        maze[y+1, x] -= 1  
-                        visited_cells.add((x, y+1))
 
-                        if record:
-                            actions.append({
-                                'type': 'carve',
-                                'from_cell': (x, y),
-                                'to_cell': (x, y+1),
-                                'direction': 'S',
-                                'stack_size': len(stack_simulation)
-                            })
-                            actions.append({
-                                'type': 'visit',
-                                'cell': (x, y+1),
-                                'stack_size': len(stack_simulation) + 1
-                            })
-
-                        fresh_compass = compass.copy()
-                        random.shuffle(fresh_compass)
-                        stack_simulation.append((x, y+1, fresh_compass))
-                        moved = True
-                        break
-                    if move == "West" and x > 0 and (x-1, y) not in visited_cells:
-                        maze[y, x] -= 8    
-                        maze[y, x-1] -= 2    
-                        visited_cells.add((x-1, y))
-
-                        if record:
-                            actions.append({
-                                'type': 'carve',
-                                'from_cell': (x, y),
-                                'to_cell': (x-1, y),
-                                'direction': 'W',
-                                'stack_size': len(stack_simulation)
-                            })
-                            actions.append({
-                                'type': 'visit',
-                                'cell': (x-1, y),
-                                'stack_size': len(stack_simulation) + 1
-                            })
-
-                        fresh_compass = compass.copy()
-                        random.shuffle(fresh_compass)
-                        stack_simulation.append((x-1, y, fresh_compass))
-                        moved = True
-                        break
-                    if move == "East" and x < self.width - 1 and (x+1, y) not in visited_cells:
-                        maze[y, x] -= 2 
-                        maze[y, x+1] -= 8   
-                        visited_cells.add((x+1, y))
-                        if record:
-                            actions.append({
-                                'type': 'carve',
-                                'from_cell': (x, y),
-                                'to_cell': (x+1, y),
-                                'direction': 'E',
-                                'stack_size': len(stack_simulation)
-                            })
-                            actions.append({
-                                'type': 'visit',
-                                'cell': (x+1, y),
-                                'stack_size': len(stack_simulation) + 1
-                            })
-                        fresh_compass = compass.copy()
-                        random.shuffle(fresh_compass)
-                        stack_simulation.append((x+1, y, fresh_compass))
-                        moved = True
-                        break
                 if not moved:
                     if record:
                         actions.append({
@@ -185,9 +126,8 @@ class Amazing:
                             'stack_size': len(stack_simulation) - 1
                         })
                     stack_simulation.pop()
-            if record:
-                return maze, actions
-            return maze
+
+            return (maze, actions) if record else maze
 
         def bfs(self, maze: n.ndarray) -> str:
             directions = {0: (0, -1, 'N'), 1: (1, 0, 'E'), 2: (0, 1, 'S'), 3: (-1, 0, 'W')}
