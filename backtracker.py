@@ -31,7 +31,7 @@ class Amazing:
             pattern_height = max(y for _, y in base_pattern) + 1
             if self.height <= pattern_height or self.width <= pattern_width:
                 print(f"cannot place pattern on the maze {self.width}/{self.height}")
-                exit(1)
+                exit(0)
             scale_x = self.width // pattern_width
             scale_y = self.height // pattern_height
             scale = max(1, min(scale_x, scale_y) // 25)
@@ -50,11 +50,10 @@ class Amazing:
         
         def iterative_backtracker(
             self,
-            maze: np.ndarray,
+            maze: n.ndarray,
             compass: List[str],
             record: bool = False
-        ) -> Union[np.ndarray, Tuple[np.ndarray, List[Dict[str, Any]]]]:
-            
+        ) -> Union[n.ndarray, Tuple[n.ndarray, List[Dict[str, Any]]]]:
             direction_map = {
                 "North": (0, -1, 1, 4),
                 "South": (0,  1, 4, 1),
@@ -75,7 +74,7 @@ class Amazing:
             for cord in pattern_coords:
                 if cord == self.entry or cord == self.exit:
                     print(f"Entry/Exit spotted on pattern")
-                    exit(1)
+                    exit(0)
                 visited_cells.add(cord)
                 x, y = cord
                 maze[y, x] = 0xF
@@ -93,7 +92,6 @@ class Amazing:
 
                     if (0 <= nx < self.width and 0 <= ny < self.height
                             and (nx, ny) not in visited_cells):
-
                         maze[y, x] -= wall
                         maze[ny, nx] -= neighbor_wall
                         visited_cells.add((nx, ny))
@@ -103,7 +101,7 @@ class Amazing:
                                 'type': 'carve',
                                 'from_cell': (x, y),
                                 'to_cell': (nx, ny),
-                                'direction': move[0],  # first letter e.g 'N', 'S', 'W', 'E'
+                                'direction': move[0],
                                 'stack_size': len(stack_simulation)
                             })
                             actions.append({
