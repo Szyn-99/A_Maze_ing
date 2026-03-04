@@ -79,3 +79,95 @@ AI tools (specifically Claude) were used during this project for the following p
 
 - **Debugging help:** Identifying and resolving issues related to `curses` display bugs, off-by-one errors in the grid, and stack handling in the iterative DFS implementation.
 - **Understanding concepts:** Clarifying how the Recursive Backtracking / DFS maze generation algorithm works conceptually, and understanding why Python's recursion limit causes issues with deep recursive traversals on large grids.
+
+# Config File
+
+The program is configured via a plain-text file. Each line follows the `KEY=VALUE` format. Here is the complete structure:
+
+```
+WIDTH=15
+HEIGHT=15
+EXIT=0,0
+ENTRY=0,9
+seed=none
+OUTPUT_FILE=maze.txt
+PERFECT=true
+```
+
+| Field         | Type              | Description                                                                  |
+|---------------|-------------------|------------------------------------------------------------------------------|
+| `WIDTH`       | Integer           | Number of columns in the maze.                                               |
+| `HEIGHT`      | Integer           | Number of rows in the maze.                                                  |
+| `ENTRY`       | `row,col`         | Coordinates of the maze entry point.                                         |
+| `EXIT`        | `row,col`         | Coordinates of the maze exit point.                                          |
+| `SEED`        | Integer or `none` | Random seed for reproducible maze generation. Use `none` for random.         |
+| `OUTPUT_FILE` | String            | Path to the file where the maze will be saved.                               |
+| `PERFECT`     | Boolean           | If `true`, generates a perfect maze (no loops, one unique path).             |
+
+---
+
+## Maze Generation Algorithm
+
+The project uses an **iterative Depth-First Search (DFS)** algorithm, also known as Recursive Backtracking.
+
+### How it works
+
+1. Start at a random cell and push it onto a stack.
+2. Mark the current cell as visited.
+3. Pick a random unvisited neighbor, carve a passage to it, and push it onto the stack.
+4. If no unvisited neighbors exist, pop the stack and backtrack.
+5. Repeat until the stack is empty — the full grid has been visited.
+
+### Why DFS?
+
+DFS was chosen for its simplicity and reliability. Its logic is straightforward to implement, it reliably produces perfect mazes with a single solution, and it maps naturally to an explicit stack structure. More complex algorithms like Prim's or Wilson's were not necessary given the project's scope.
+
+The recursive version of DFS was initially considered but was abandoned because Python's default recursion limit causes crashes on larger grids. The iterative version using an explicit stack solves this problem entirely without needing to raise the system limit.
+
+---
+
+## Reusable Components
+
+The core of the project is encapsulated in a single self-contained module that is fully independent from the display layer. It bundles both the **iterative DFS maze generation logic** and the **BFS shortest-path finder**, operating purely on the maze grid data structure. This module can be imported and reused in any project that needs procedural maze generation or unweighted grid pathfinding, regardless of how the result is rendered or displayed.
+
+---
+
+## Team & Project Management
+
+### Roles
+
+| Team Member | Responsibility                                      |
+|-------------|-----------------------------------------------------|
+| `aymel-ha`  | Maze generation logic (iterative DFS algorithm)     |
+| `iamessag`  | Terminal visualization (`curses` rendering/display) |
+
+### Planning & How It Evolved
+
+The initial plan was straightforward: one member handles generation, the other handles visualization, with a clear separation between the two layers. This division worked well in practice and allowed both of us to work in parallel with minimal blockers.
+
+Two main challenges were encountered along the way:
+- **Recursive DFS** hit Python's recursion limit on larger mazes and had to be rewritten iteratively using an explicit stack.
+- **Config file parsing** had early bugs that required debugging and reworking the parser logic.
+
+Both issues were identified and resolved during development without significantly disrupting the overall plan.
+
+### What Worked Well
+
+- The clear separation between generation and visualization made collaboration smooth and kept the codebase modular.
+- Using an iterative DFS with an explicit stack proved to be a robust and clean solution once the recursion issue was identified.
+
+### What Could Be Improved
+
+- The config parser could be made more robust with better error handling for malformed or missing fields.
+- Adding support for multiple maze algorithms (e.g., Prim's, Wilson's) as a selectable config option would make the project more extensible.
+
+### Tools Used
+
+| Tool          | Purpose                               |
+|---------------|---------------------------------------|
+| GitHub        | Version control and collaboration     |
+| Vogsphere     | School's internal Git platform        |
+| VS Code / vim | Code editing                          |
+| Discord/Slack | Team communication                    |
+
+---
