@@ -1,7 +1,7 @@
 import random
 from typing import List, Tuple, Optional, Set, Dict, Any, Union
 import numpy as n
-class MazeGeneration:
+class Amazing:
         def __init__(
             self,
             height: int,

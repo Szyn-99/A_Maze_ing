@@ -2,57 +2,41 @@ import numpy as n
 import random
 from typing import Any, List, Dict, Union, Optional
 from config_validator import Maze_config_analyzer as ConfigAnalyzer
-from backtracker import MazeGeneration as MazeGen
+from backtracker import Amazing as MazeGen
 from maze_renderer import Render_Maze
 
 
-# class A_Maze_Ing:
-#     def __init__(self, height, width, entry, exit_, perfect, output_file, seed):
-#         self.width = width
-#         self.height = height
-#         self.entry = entry
-#         self.exit = exit_
-#         self.output_file = output_file
-#         self.seed = seed
-#         self.perfect = perfect
-#         self.generated_maze = None
-#         self.path = None
+class PyMaze:
+    def generate_maze(self, height: int, width: int, entry: tuple, exit_: tuple, perfect: bool, seed: Optional[int] = None, record: bool = False):
+        compass = ["North", "East", "South", "West"]
+        grid = n.full((height, width), 0xF, dtype=n.uint8)
+        maze_generator = MazeGen(height, width, entry, exit_, perfect, None, None)
+        generated_maze, actions = maze_generator.iterative_backtracker(
+            grid, compass, record=record
+        )
+        if seed is not None:
+            random.seed(seed)
 
-#     def get_entry(self):
-#         return self.entry
-#     def get_exit(self):
-#         return self.exit
-#     def get_maze(self):
-#         return self.generated_maze
-#     def bring_maze(self):
-#         compass = ["North", "East", "South", "West"]
-#         maze = n.full((self.height, self.width), 0xF,dtype=n.uint8)
-#         self.generated_maze = MazeGen.iterative_backtracker(maze, self.height, self.width, self.entry, compass, self.exit, self.seed, True)
-#         if self.perfect == False:
-#             self.generated_maze = MazeGen.imperfect_maze(self.generated_maze, self.height, self.width, self.entry, self.exit, self.seed, True)
-#         return self.generated_maze
+        if not perfect:
+            generated_maze = maze_generator.imperfect_maze(generated_maze, height, width)
 
-#     def get_grid(self):
-#         grid = n.full((self.height, self.width), 0xF,dtype=n.uint8)
-#         return grid
+        path = maze_generator.bfs(generated_maze)
+        return generated_maze, path, actions
 
-#     def get_path(self, generated_maze):
-#         self.path = MazeGen.bfs(generated_maze, self.entry, self.exit)
-#         return self.path
-
-#     def maze_hexadecimal(self):
-#         with open(self.output_file, "w") as f:
-#             for y in range(self.height):  
-#                 row_cells = []
-#                 for x in range(self.width):  
-#                     cell_hex = self.generated_maze[y, x]
-#                     row_cells.append(hex(cell_hex)[2:].upper())
-#                 print("".join(row_cells), file=f)
-#             enx, eny = self.entry
-#             exx, exy = self.exit
-#             print(f"\n{enx},{eny}", file=f, end="\n")
-#             print(f"{exx},{exy}", file=f, end="\n")
-#             print(f"{self.path}", file=f, end="\n")
+    def maze_hexadecimal(self, output_file: str, generated_maze: n.ndarray, entry: tuple, exit_: tuple, path: List[tuple]):
+        print("here")
+        with open(output_file, "w") as f:
+            for y in range(generated_maze.shape[0]):  
+                row_cells = []
+                for x in range(generated_maze.shape[1]):  
+                    cell_hex = generated_maze[y, x]
+                    row_cells.append(hex(cell_hex)[2:].upper())
+                print("".join(row_cells), file=f)
+            enx, eny = entry
+            exx, exy = exit_
+            print(f"\n{enx},{eny}", file=f, end="\n")
+            print(f"{exx},{exy}", file=f, end="\n")
+            print(f"{path}", file=f, end="\n")
 
 
 def main():
@@ -65,27 +49,19 @@ def main():
     perfect = parsed_config["PERFECT"]
     seed = parsed_config["SEED"]
 
-    if seed:
-        random.seed(seed)
-
-    compass = ["North", "East", "South", "West"]
-    grid = n.full((height, width), 0xF, dtype=n.uint8)
-    maze_generator = MazeGen(height, width, entry, exit_, perfect, output_file, seed)
-    generated_maze, actions = maze_generator.iterative_backtracker(
-        grid, compass, record=True
-    )
-
-    if not perfect:
-        generated_maze = maze_generator.imperfect_maze(generated_maze, height, width)
-
-    path = maze_generator.bfs(generated_maze)
+    maze = PyMaze()
+    generated_maze, path, actions = maze.generate_maze(height, width, entry, exit_, perfect, seed, record=True)
+    maze.maze_hexadecimal(output_file, generated_maze, entry, exit_, path)
 
     
     renderer = Render_Maze(generated_maze, entry, exit_)
-    renderer.animate(actions)
+    # while True:
+    #     renderer.animate(actions)
+    #     renderer.display()
     renderer.display()
 
-
+def add(a, b):
+    return a + b   
 
 if __name__ == "__main__":
    main()

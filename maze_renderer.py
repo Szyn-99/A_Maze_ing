@@ -40,6 +40,9 @@ class Render_Maze:
 
     def animate(self, actions):
         curses.wrapper(self._animate_main, actions)
+        if not actions:
+            return False
+        return True
 
     def _animate_main(self, stdscr, actions):
         curses.curs_set(0)

@@ -18,7 +18,7 @@ ENTRY=0, 9
 
 
 
-OUTPUT_FILE=alo
+OUTPUT_FILE=output.txt
 
 
 PERFECT=true
