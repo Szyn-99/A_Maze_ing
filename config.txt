@@ -1,0 +1,7 @@
+WIDTH=15
+HEIGHT=15
+ExIT=0,2
+ENTRY=0, +9
+OUtPUT_FILE=output.txt
+PERFECT=true
+# seed = hh
